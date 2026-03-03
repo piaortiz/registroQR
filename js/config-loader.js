@@ -100,16 +100,72 @@
     }
 
     /**
-     * Aplicar color primario
+     * Convertir hex a RGB
+     */
+    function hexToRgb(hex) {
+        // Remover el # si existe
+        hex = hex.replace(/^#/, '');
+        
+        // Parsear los valores RGB
+        const bigint = parseInt(hex, 16);
+        const r = (bigint >> 16) & 255;
+        const g = (bigint >> 8) & 255;
+        const b = bigint & 255;
+        
+        return { r, g, b };
+    }
+
+    /**
+     * Ajustar brillo de un color RGB (factor > 1 aclara, < 1 oscurece)
+     */
+    function adjustBrightness(rgb, factor) {
+        return {
+            r: Math.min(255, Math.round(rgb.r * factor)),
+            g: Math.min(255, Math.round(rgb.g * factor)),
+            b: Math.min(255, Math.round(rgb.b * factor))
+        };
+    }
+
+    /**
+     * Convertir RGB a hex
+     */
+    function rgbToHex(rgb) {
+        return '#' + ((1 << 24) + (rgb.r << 16) + (rgb.g << 8) + rgb.b)
+            .toString(16)
+            .slice(1);
+    }
+
+    /**
+     * Aplicar color primario y generar todas sus variantes
      */
     function applyPrimaryColor(color) {
         try {
-            // Aplicar variable CSS globalmente - se propaga automáticamente
-            document.documentElement.style.setProperty('--primary-color', color);
-            // También actualizar color secundario para mantener consistencia
-            document.documentElement.style.setProperty('--color-secondary', color);
+            // Convertir el color a RGB
+            const baseRgb = hexToRgb(color);
+            
+            // Generar variantes
+            const darkerRgb = adjustBrightness(baseRgb, 0.75);  // 25% más oscuro
+            const lighterRgb = adjustBrightness(baseRgb, 1.25); // 25% más claro
+            
+            // Aplicar todas las variables CSS
+            const root = document.documentElement;
+            
+            // Colores base
+            root.style.setProperty('--primary-color', color);
+            root.style.setProperty('--color-primary', rgbToHex(darkerRgb));     // Oscuro
+            root.style.setProperty('--color-secondary', color);                  // Base
+            root.style.setProperty('--color-accent', rgbToHex(lighterRgb));     // Claro
+            
+            // Versiones con transparencia (10% opacidad)
+            root.style.setProperty('--color-primary-light', `rgba(${darkerRgb.r}, ${darkerRgb.g}, ${darkerRgb.b}, 0.1)`);
+            root.style.setProperty('--color-secondary-light', `rgba(${baseRgb.r}, ${baseRgb.g}, ${baseRgb.b}, 0.1)`);
+            root.style.setProperty('--color-accent-light', `rgba(${lighterRgb.r}, ${lighterRgb.g}, ${lighterRgb.b}, 0.1)`);
 
-            console.log('✅ Color primario aplicado globalmente:', color);
+            console.log('✅ Color primario y variantes aplicados:', {
+                primary: rgbToHex(darkerRgb),
+                secondary: color,
+                accent: rgbToHex(lighterRgb)
+            });
         } catch (error) {
             console.error('Error aplicando color:', error);
         }

@@ -63,6 +63,23 @@
     transition: opacity 0.3s ease-in-out;
 }
 
+/* ===== ESTILOS DE ADAPTACIÓN DE IMÁGENES ===== */
+#logoHeaderImg {
+    max-width: 100%;
+    height: auto;
+    max-height: 150px;
+    object-fit: contain;
+    display: block;
+}
+
+#logoFooterImg {
+    max-width: 100%;
+    height: auto;
+    max-height: 100px;
+    object-fit: contain;
+    display: block;
+}
+
 /* ===== FIN TRANSICIONES ===== */
 
 /* ===== DEBUG: BORDES DE COLORES PARA VISUALIZAR CONTENEDORES ===== */
