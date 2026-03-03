@@ -305,9 +305,8 @@ async function handleCheckDni() {
     // Si no está registrado o no pudimos verificar, avanzamos al formulario
     elements.checkDniBtn.disabled = false;
     elements.checkDniBtn.textContent = 'CONTINUAR';
-    // DESACTIVADO: No aceptar más registros
-    showRegistrationClosed();
-    // goToRegistrationForm(dni);
+    
+    goToRegistrationForm(dni);
 }
 
 // ===== REGISTRO (VERIFICACIÓN Y REGISTRO EN UNA SOLA LLAMADA) =====
