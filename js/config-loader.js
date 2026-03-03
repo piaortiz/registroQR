@@ -38,7 +38,7 @@
                 return null;
             }
 
-            // Verificar si hay una versión más nueva en localStorage (admin actualizó)
+            // Verificar si hay una versión más nueva en localStorage (admin actualizó desde mismo navegador)
             const lastUpdate = localStorage.getItem('config_updated');
             if (lastUpdate && parseInt(lastUpdate) > data.timestamp) {
                 console.log('🔄 Nueva configuración disponible, actualizando...');
@@ -46,7 +46,11 @@
                 return null;
             }
 
-            return data.config;
+            // Devolver con cacheVersion para verificación cross-device
+            return {
+                config: data.config,
+                cacheVersion: data.cacheVersion || data.timestamp
+            };
         } catch (error) {
             console.warn('Error leyendo cache:', error);
             return null;
@@ -56,11 +60,12 @@
     /**
      * Guardar configuración en cache
      */
-    function saveToCache(config) {
+    function saveToCache(config, cacheVersion) {
         try {
             const data = {
                 config: config,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                cacheVersion: cacheVersion || Date.now()
             };
             sessionStorage.setItem(CACHE_KEY, JSON.stringify(data));
         } catch (error) {
@@ -76,7 +81,10 @@
             // Verificar si Firebase está inicializado
             if (typeof firebase === 'undefined' || !firebase.apps.length) {
                 console.warn('Firebase no inicializado, usando configuración predeterminada');
-                return defaultConfig;
+                return {
+                    config: defaultConfig,
+                    cacheVersion: Date.now()
+                };
             }
 
             const db = firebase.firestore();
@@ -86,18 +94,27 @@
                 const config = doc.data();
                 console.log('✅ Configuración cargada desde Firebase');
                 return {
-                    primaryColor: config.primaryColor || defaultConfig.primaryColor,
-                    headerBackgroundColor: config.headerBackgroundColor || defaultConfig.headerBackgroundColor,
-                    headerImage: config.headerImage || defaultConfig.headerImage,
-                    footerImage: config.footerImage || defaultConfig.footerImage
+                    config: {
+                        primaryColor: config.primaryColor || defaultConfig.primaryColor,
+                        headerBackgroundColor: config.headerBackgroundColor || defaultConfig.headerBackgroundColor,
+                        headerImage: config.headerImage || defaultConfig.headerImage,
+                        footerImage: config.footerImage || defaultConfig.footerImage
+                    },
+                    cacheVersion: config.cacheVersion || Date.now()
                 };
             } else {
                 console.log('ℹ️ No hay configuración personalizada, usando predeterminada');
-                return defaultConfig;
+                return {
+                    config: defaultConfig,
+                    cacheVersion: Date.now()
+                };
             }
         } catch (error) {
             console.error('❌ Error cargando configuración:', error);
-            return defaultConfig;
+            return {
+                config: defaultConfig,
+                cacheVersion: Date.now()
+            };
         }
     }
 
@@ -283,16 +300,29 @@
 
         try {
             // Intentar cargar desde cache primero
-            let config = getFromCache();
+            let cachedData = getFromCache();
 
-            if (config) {
-                console.log('📦 Usando configuración desde cache');
-                applyConfiguration(config);
+            if (cachedData) {
+                console.log('📦 Verificando versión de cache...');
+                
+                // SIEMPRE verificar si hay una versión más nueva en Firebase
+                // Esto permite sincronización cross-device
+                const firebaseData = await loadConfigFromFirebase();
+                
+                if (firebaseData.cacheVersion > cachedData.cacheVersion) {
+                    console.log('🔄 Nueva versión detectada en Firebase, actualizando...');
+                    sessionStorage.removeItem(CACHE_KEY);
+                    saveToCache(firebaseData.config, firebaseData.cacheVersion);
+                    applyConfiguration(firebaseData.config);
+                } else {
+                    console.log('✅ Cache actualizado, usando configuración guardada');
+                    applyConfiguration(cachedData.config);
+                }
             } else {
                 console.log('🔄 Cargando configuración desde Firebase...');
-                config = await loadConfigFromFirebase();
-                saveToCache(config);
-                applyConfiguration(config);
+                const firebaseData = await loadConfigFromFirebase();
+                saveToCache(firebaseData.config, firebaseData.cacheVersion);
+                applyConfiguration(firebaseData.config);
             }
 
         } catch (error) {
