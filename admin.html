@@ -204,11 +204,9 @@
     </div>
 
     <!-- Firebase SDK -->
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
     <!-- Scripts -->
     <script src="js/firebase-config.js"></script>
@@ -219,6 +217,11 @@
         // Inicializar Firebase PRIMERO
         firebase.initializeApp(window.FIREBASE_CONFIG);
         console.log('✅ Firebase inicializado');
+
+        // Configuración de Cloudinary
+        const CLOUDINARY_CLOUD_NAME = 'casinomagic';
+        const CLOUDINARY_UPLOAD_PRESET = 'registro_qr';
+        const CLOUDINARY_FOLDER = 'configuracion';
 
         let eventosData = [];
         let registrosActuales = [];
@@ -606,8 +609,6 @@
 
         // ========== FUNCIONES DE PERSONALIZACIÓN ==========
 
-        let storage = null;
-
         // Cambiar entre tabs
         function cambiarTab(tabName) {
             // Ocultar todos los tabs
@@ -618,9 +619,8 @@
             document.getElementById('tab-' + tabName).classList.add('active');
             event.target.classList.add('active');
 
-            // Cargar configuración si es primera vez
-            if (tabName === 'personalizacion' && !storage) {
-                storage = firebase.storage();
+            // Cargar configuración si es tab de personalización
+            if (tabName === 'personalizacion') {
                 cargarConfiguracionActual();
             }
         }
@@ -735,6 +735,28 @@
             return file;
         }
 
+        // Subir imagen a Cloudinary
+        async function uploadToCloudinary(file, type) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+            formData.append('folder', CLOUDINARY_FOLDER);
+            formData.append('public_id', `${type}-${Date.now()}`); // header-1234567890 o footer-1234567890
+            
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error?.message || 'Error subiendo imagen a Cloudinary');
+            }
+            
+            const data = await response.json();
+            return data.secure_url; // URL pública de la imagen
+        }
+
         // Guardar personalización
         async function guardarPersonalizacion(event) {
             event.preventDefault();
@@ -753,24 +775,16 @@
                     updatedBy: firebase.auth().currentUser.email
                 };
 
-                // Validar y subir imagen header
+                // Validar y subir imagen header a Cloudinary
                 const headerFile = validarImagen(document.getElementById('inputHeaderImage').files[0]);
                 if (headerFile) {
-                    const ext = headerFile.name.split('.').pop();
-                    // Incluir timestamp en el nombre para cache busting
-                    const headerRef = storage.ref(`configuracion/header-${timestamp}.${ext}`);
-                    await headerRef.put(headerFile);
-                    config.headerImage = await headerRef.getDownloadURL();
+                    config.headerImage = await uploadToCloudinary(headerFile, 'header');
                 }
 
-                // Validar y subir imagen footer
+                // Validar y subir imagen footer a Cloudinary
                 const footerFile = validarImagen(document.getElementById('inputFooterImage').files[0]);
                 if (footerFile) {
-                    const ext = footerFile.name.split('.').pop();
-                    // Incluir timestamp en el nombre para cache busting
-                    const footerRef = storage.ref(`configuracion/footer-${timestamp}.${ext}`);
-                    await footerRef.put(footerFile);
-                    config.footerImage = await footerRef.getDownloadURL();
+                    config.footerImage = await uploadToCloudinary(footerFile, 'footer');
                 }
 
                 // Guardar en Firestore
