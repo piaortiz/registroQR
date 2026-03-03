@@ -1,0 +1,41 @@
+# Archivos y carpetas a ignorar en Vercel deployment
+.git
+.vscode
+node_modules
+*.log
+
+# Tests y documentación
+tests/
+docs/images/
+*.test.js
+*.spec.js
+
+# Archivos temporales
+*.tmp
+*.backup
+*.bak
+temp/
+
+# Archive folders
+img/archive/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Development files
+.env
+.env.local
+.env.*.local
+
+# Documentación extensa (mantener solo README)
+TAREAS.md
+clickup*.csv
+jira*.csv
+GUIA_IMPORTACION_PM.md
+ESTRUCTURA_CLICKUP.md
+
+# Backend que no se usa en frontend
+backend/
+generar_qr.py

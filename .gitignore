@@ -65,10 +65,31 @@ planillagoogle.txt
 *.backup
 *.backup.*
 backup/
-archive/
-*.backup
 *.bak
+
+# Archive folders (imágenes no utilizadas, etc.)
+img/archive/
+docs/archive/
+
+# Minified files (se pueden regenerar)
+*.min.js
+*.min.css
 
 # Archivos locales
 planillagoogle.txt
 *.code-workspace
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Testing
+coverage/
+.pytest_cache/
+.vercel

@@ -15,13 +15,20 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    // Colección de configuración
+    // Colección de configuración visual (estilos personalizables)
     match /configuracion/{configId} {
       // Permitir lectura pública de la configuración visual
+      // Esto permite que cualquier usuario vea los estilos aplicados
       allow read: if true;
       
-      // Solo admin autenticado puede modificar
-      allow create, update, delete: if isAuthenticated();
+      // Solo admin autenticado puede modificar estilos
+      allow create, update: if isAuthenticated() 
+        && configId == 'estilos'
+        && request.resource.data.keys().hasAll(['primaryColor'])
+        && request.resource.data.primaryColor is string;
+      
+      // No permitir eliminación de configuración de estilos
+      allow delete: if false;
     }
     
     // Colección de eventos

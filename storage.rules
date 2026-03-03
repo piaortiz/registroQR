@@ -1,0 +1,54 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isValidSize() {
+      // Máximo 2MB
+      return request.resource.size < 2 * 1024 * 1024;
+    }
+    
+    function isValidImageFormat() {
+      return request.resource.contentType.matches('image/(jpeg|jpg|png|webp)');
+    }
+    
+    // Carpeta de configuración - imágenes de personalización
+    match /configuracion/{imageFile} {
+      // Lectura pública para mostrar las imágenes
+      allow read: if true;
+      
+      // Solo usuarios autenticados pueden subir imágenes
+      // Validaciones:
+      // - Debe ser una imagen válida (jpeg, jpg, png, webp)
+      // - Tamaño máximo 2MB
+      // - Solo archivos: header.jpg, footer.jpg, header.png, footer.png
+      allow write: if isAuthenticated()
+        && isValidImageFormat()
+        && isValidSize()
+        && (imageFile.matches('header\\.(jpg|jpeg|png|webp)')
+            || imageFile.matches('footer\\.(jpg|jpeg|png|webp)'));
+      
+      // No permitir eliminación
+      allow delete: if isAuthenticated();
+    }
+    
+    // Carpeta de eventos - imágenes de eventos (si se necesita en el futuro)
+    match /eventos/{eventoId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    
+    // Denegar acceso a cualquier otra ruta no especificada
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

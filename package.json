@@ -1,0 +1,31 @@
+{
+  "name": "registro-qr-casino-magic",
+  "version": "1.0.0",
+  "description": "Sistema de registro QR personalizable para Casino Magic SA",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "build": "echo 'Static site - no build needed'",
+    "deploy": "vercel --prod",
+    "deploy:staging": "vercel",
+    "preview": "vercel --prod --dry-run"
+  },
+  "keywords": [
+    "qr",
+    "registro",
+    "firebase",
+    "casino-magic",
+    "eventos"
+  ],
+  "author": "Mariapia Ortiz <piaortiz@casinomagic.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/piaortiz/registroQR"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}

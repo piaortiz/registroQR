@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Admin - Casino Magic</title>
-    <link rel="stylesheet" href="css/admin.min.css">
+    <link rel="stylesheet" href="css/admin.css">
 </head>
 
 <body>
@@ -38,6 +38,14 @@
             </div>
         </div>
 
+        <!-- Tabs de Navegación -->
+        <div class="admin-tabs">
+            <button class="tab-button active" onclick="cambiarTab('eventos')">📊 Eventos y Registros</button>
+            <button class="tab-button" onclick="cambiarTab('personalizacion')">🎨 Personalización</button>
+        </div>
+
+        <!-- Tab Content: Eventos -->
+        <div id="tab-eventos" class="tab-content active">
         <!-- Estadísticas Generales -->
         <div class="cards-grid" id="statsGrid">
             <!-- Se llenan dinámicamente -->
@@ -79,6 +87,79 @@
             </div>
         </div>
 
+        </div>
+        <!-- Fin Tab Eventos -->
+
+        <!-- Tab Content: Personalización -->
+        <div id="tab-personalizacion" class="tab-content">
+            <div class="content-section">
+                <h2>🎨 Personalización del Sistema</h2>
+                <p style="color: #666; margin-bottom: 20px;">Configura la apariencia del sistema de registro</p>
+
+                <form id="formPersonalizacion" onsubmit="guardarPersonalizacion(event)">
+                    <div class="personalizacion-grid">
+                        <!-- Imagen Header -->
+                        <div class="form-card">
+                            <h3>🖼️ Imagen del Header</h3>
+                            <input type="file" id="inputHeaderImage" accept="image/jpeg,image/jpg,image/png,image/webp" onchange="previewImage('header', this)">
+                            <small style="color: #666;">Tamaño recomendado: 1200x200px. Max 2MB.</small>
+                            <div class="image-preview-container">
+                                <img id="previewHeader" class="image-preview" style="display:none;" alt="Preview Header">
+                            </div>
+                        </div>
+
+                        <!-- Imagen Footer -->
+                        <div class="form-card">
+                            <h3>🖼️ Imagen del Footer</h3>
+                            <input type="file" id="inputFooterImage" accept="image/jpeg,image/jpg,image/png,image/webp" onchange="previewImage('footer', this)">
+                            <small style="color: #666;">Tamaño recomendado: 1200x150px. Max 2MB.</small>
+                            <div class="image-preview-container">
+                                <img id="previewFooter" class="image-preview" style="display:none;" alt="Preview Footer">
+                            </div>
+                        </div>
+
+                        <!-- Color Primario -->
+                        <div class="form-card full-width">
+                            <h3>🎨 Color Primario</h3>
+                            <div class="color-picker-group">
+                                <input type="color" id="inputPrimaryColor" value="#161337" onchange="actualizarColorTexto(this.value)">
+                                <input type="text" id="inputPrimaryColorText" value="#161337" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$" onchange="actualizarColorPicker(this.value)">
+                            </div>
+                            <small style="color: #666;">Este color se aplicará a botones y elementos destacados</small>
+                        </div>
+                    </div>
+
+                    <!-- Vista Previa -->
+                    <div class="preview-section">
+                        <h3>👁️ Vista Previa</h3>
+                        <div class="preview-container">
+                            <div id="demoHeader" class="demo-header"></div>
+                            <div class="demo-content">
+                                <button class="demo-button" id="demoButton">Botón de ejemplo</button>
+                            </div>
+                            <div id="demoFooter" class="demo-footer"></div>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="btnGuardarPersonalizacion">
+                            💾 Guardar Cambios
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="restaurarConfiguracion()">
+                            🔄 Restaurar Predeterminado
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Loading Overlay -->
+                <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+                    <div class="spinner"></div>
+                    <p>Guardando cambios...</p>
+                </div>
+            </div>
+        </div>
+        <!-- Fin Tab Personalización -->
 
     </div>
 
@@ -124,9 +205,11 @@
     </div>
 
     <!-- Firebase SDK -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
     <!-- Scripts -->
     <script src="js/firebase-config.js"></script>
@@ -517,6 +600,193 @@
             }
         }
 
+
+        // ========== FUNCIONES DE PERSONALIZACIÓN ==========
+
+        let storage = null;
+
+        // Cambiar entre tabs
+        function cambiarTab(tabName) {
+            // Ocultar todos los tabs
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+
+            // Mostrar tab seleccionado
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            // Cargar configuración si es primera vez
+            if (tabName === 'personalizacion' && !storage) {
+                storage = firebase.storage();
+                cargarConfiguracionActual();
+            }
+        }
+
+        // Preview de imagen
+        function previewImage(tipo, input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // Validar tamaño (2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('La imagen es muy grande. Máximo 2MB.');
+                input.value = '';
+                return;
+            }
+
+            // Validar formato
+            if (!file.type.match('image/(jpeg|jpg|png|webp)')) {
+                alert('Formato no válido. Usa JPG, PNG o WebP.');
+                input.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('preview' + tipo.charAt(0).toUpperCase() + tipo.slice(1));
+                const demo = document.getElementById('demo' + tipo.charAt(0).toUpperCase() + tipo.slice(1));
+                
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                
+                demo.style.backgroundImage = `url(${e.target.result})`;
+                demo.style.backgroundSize = 'contain';
+                demo.style.backgroundRepeat = 'no-repeat';
+                demo.style.backgroundPosition = 'center';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Actualizar color desde picker
+        function actualizarColorTexto(color) {
+            document.getElementById('inputPrimaryColorText').value = color;
+            document.getElementById('demoButton').style.background = color;
+        }
+
+        // Actualizar color desde texto
+        function actualizarColorPicker(color) {
+            if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                document.getElementById('inputPrimaryColor').value = color;
+                document.getElementById('demoButton').style.background = color;
+            }
+        }
+
+        // Cargar configuración actual desde Firebase
+        async function cargarConfiguracionActual() {
+            try {
+                const db = firebase.firestore();
+                const doc = await db.collection('configuracion').doc('estilos').get();
+                
+                if (doc.exists) {
+                    const config = doc.data();
+                    
+                    // Cargar color
+                    if (config.primaryColor) {
+                        document.getElementById('inputPrimaryColor').value = config.primaryColor;
+                        document.getElementById('inputPrimaryColorText').value = config.primaryColor;
+                        document.getElementById('demoButton').style.background = config.primaryColor;
+                    }
+                    
+                    // Cargar imágenes
+                    if (config.headerImage) {
+                        document.getElementById('previewHeader').src = config.headerImage;
+                        document.getElementById('previewHeader').style.display = 'block';
+                        document.getElementById('demoHeader').style.backgroundImage = `url(${config.headerImage})`;
+                        document.getElementById('demoHeader').style.backgroundSize = 'contain';
+                        document.getElementById('demoHeader').style.backgroundRepeat = 'no-repeat';
+                        document.getElementById('demoHeader').style.backgroundPosition = 'center';
+                    }
+                    
+                    if (config.footerImage) {
+                        document.getElementById('previewFooter').src = config.footerImage;
+                        document.getElementById('previewFooter').style.display = 'block';
+                        document.getElementById('demoFooter').style.backgroundImage = `url(${config.footerImage})`;
+                        document.getElementById('demoFooter').style.backgroundSize = 'contain';
+                        document.getElementById('demoFooter').style.backgroundRepeat = 'no-repeat';
+                       document.getElementById('demoFooter').style.backgroundPosition = 'center';
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando configuración:', error);
+            }
+        }
+
+        // Guardar personalización
+        async function guardarPersonalizacion(event) {
+            event.preventDefault();
+            
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = 'flex';
+
+            try {
+                const db = firebase.firestore();
+                const config = {
+                    primaryColor: document.getElementById('inputPrimaryColor').value,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: firebase.auth().currentUser.email
+                };
+
+                // Subir imagen header
+                const headerFile = document.getElementById('inputHeaderImage').files[0];
+                if (headerFile) {
+                    const headerRef = storage.ref('configuracion/header.' + headerFile.name.split('.').pop());
+                    await headerRef.put(headerFile);
+                    config.headerImage = await headerRef.getDownloadURL();
+                }
+
+                // Subir imagen footer
+                const footerFile = document.getElementById('inputFooterImage').files[0];
+                if (footerFile) {
+                    const footerRef = storage.ref('configuracion/footer.' + footerFile.name.split('.').pop());
+                    await footerRef.put(footerFile);
+                    config.footerImage = await footerRef.getDownloadURL();
+                }
+
+                // Guardar en Firestore
+                await db.collection('configuracion').doc('estilos').set(config, { merge: true });
+
+                alert('✅ Configuración guardada exitosamente');
+                
+                // Limpiar inputs de archivo
+                document.getElementById('inputHeaderImage').value = '';
+                document.getElementById('inputFooterImage').value = '';
+                
+            } catch (error) {
+                console.error('Error guardando:', error);
+                alert('❌ Error guardando la configuración: ' + error.message);
+            } finally {
+                overlay.style.display = 'none';
+            }
+        }
+
+        // Restaurar configuración predeterminada
+        async function restaurarConfiguracion() {
+            if (!confirm('¿Estás seguro de restaurar la configuración predeterminada?')) {
+                return;
+            }
+
+            try {
+                // Resetear valores del formulario
+                document.getElementById('inputPrimaryColor').value = '#161337';
+                document.getElementById('inputPrimaryColorText').value = '#161337';
+                document.getElementById('demoButton').style.background = '#161337';
+                
+                // Limpiar previews
+                document.getElementById('previewHeader').style.display = 'none';
+                document.getElementById('previewFooter').style.display = 'none';
+                document.getElementById('demoHeader').style.backgroundImage = '';
+                document.getElementById('demoFooter').style.backgroundImage = '';
+                
+                // Limpiar inputs
+                document.getElementById('inputHeaderImage').value = '';
+                document.getElementById('inputFooterImage').value = '';
+
+                alert('Configuración restaurada. Presiona "Guardar Cambios" para aplicar.');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error restaurando configuración');
+            }
+        }
 
     </script>
 </body>

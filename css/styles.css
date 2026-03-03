@@ -1,5 +1,8 @@
 /* Variables para la paleta de colores */
 :root {
+    /* Color primario personalizable */
+    --primary-color: #e5401f;
+    
     /* Colores principales */
     /* Colores principales - Base #e5401f */
     --color-primary: #c2361a;
