@@ -707,24 +707,26 @@
                         document.getElementById('demoHeader').style.backgroundColor = config.headerBackgroundColor;
                     }
                     
-                    // Cargar imágenes
-                    if (config.headerImage) {
-                        document.getElementById('previewHeader').src = config.headerImage;
-                        document.getElementById('previewHeader').style.display = 'block';
-                        document.getElementById('demoHeader').style.backgroundImage = `url(${config.headerImage})`;
-                        document.getElementById('demoHeader').style.backgroundSize = 'contain';
-                        document.getElementById('demoHeader').style.backgroundRepeat = 'no-repeat';
-                        document.getElementById('demoHeader').style.backgroundPosition = 'center';
-                    }
+                    // Cargar imágenes (si no hay personalizadas, mostrar las locales por defecto)
+                    const headerImgSrc = config.headerImage || 'img/Heather.png';
+                    const isHeaderCustom = !!config.headerImage;
+                    document.getElementById('previewHeader').src = headerImgSrc;
+                    document.getElementById('previewHeader').style.display = 'block';
+                    document.getElementById('previewHeader').title = isHeaderCustom ? 'Imagen personalizada (Cloudinary)' : 'Imagen local por defecto';
+                    document.getElementById('demoHeader').style.backgroundImage = `url(${headerImgSrc})`;
+                    document.getElementById('demoHeader').style.backgroundSize = 'contain';
+                    document.getElementById('demoHeader').style.backgroundRepeat = 'no-repeat';
+                    document.getElementById('demoHeader').style.backgroundPosition = 'center';
                     
-                    if (config.footerImage) {
-                        document.getElementById('previewFooter').src = config.footerImage;
-                        document.getElementById('previewFooter').style.display = 'block';
-                        document.getElementById('demoFooter').style.backgroundImage = `url(${config.footerImage})`;
-                        document.getElementById('demoFooter').style.backgroundSize = 'contain';
-                        document.getElementById('demoFooter').style.backgroundRepeat = 'no-repeat';
-                       document.getElementById('demoFooter').style.backgroundPosition = 'center';
-                    }
+                    const footerImgSrc = config.footerImage || 'img/Pie blanco.png';
+                    const isFooterCustom = !!config.footerImage;
+                    document.getElementById('previewFooter').src = footerImgSrc;
+                    document.getElementById('previewFooter').style.display = 'block';
+                    document.getElementById('previewFooter').title = isFooterCustom ? 'Imagen personalizada (Cloudinary)' : 'Imagen local por defecto';
+                    document.getElementById('demoFooter').style.backgroundImage = `url(${footerImgSrc})`;
+                    document.getElementById('demoFooter').style.backgroundSize = 'contain';
+                    document.getElementById('demoFooter').style.backgroundRepeat = 'no-repeat';
+                    document.getElementById('demoFooter').style.backgroundPosition = 'center';
                 }
             } catch (error) {
                 console.error('Error cargando configuración:', error);
@@ -831,33 +833,43 @@
 
         // Restaurar configuración predeterminada
         async function restaurarConfiguracion() {
-            if (!confirm('¿Estás seguro de restaurar la configuración predeterminada?')) {
+            if (!confirm('¿Estás seguro de restaurar la configuración predeterminada?\n\nEsto eliminará las imágenes personalizadas y usará las imágenes locales del código.')) {
                 return;
             }
 
-            try {
-                // Resetear valores del formulario
-                document.getElementById('inputPrimaryColor').value = '#161337';
-                document.getElementById('inputPrimaryColorText').value = '#161337';
-                document.getElementById('demoButton').style.background = '#161337';
-                document.getElementById('inputHeaderBgColor').value = '#ffffff';
-                document.getElementById('inputHeaderBgColorText').value = '#ffffff';
-                document.getElementById('demoHeader').style.backgroundColor = '#ffffff';
-                
-                // Limpiar previews
-                document.getElementById('previewHeader').style.display = 'none';
-                document.getElementById('previewFooter').style.display = 'none';
-                document.getElementById('demoHeader').style.backgroundImage = '';
-                document.getElementById('demoFooter').style.backgroundImage = '';
-                
-                // Limpiar inputs
-                document.getElementById('inputHeaderImage').value = '';
-                document.getElementById('inputFooterImage').value = '';
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = 'flex';
 
-                alert('Configuración restaurada. Presiona "Guardar Cambios" para aplicar.');
+            try {
+                const db = firebase.firestore();
+                const timestamp = Date.now();
+
+                // Guardar en Firebase eliminando las imágenes personalizadas
+                // Al eliminar headerImage y footerImage, config-loader usará los locales:
+                // img/Heather.png (header) y img/Pie blanco.png (footer)
+                await db.collection('configuracion').doc('estilos').set({
+                    primaryColor: '#161337',
+                    headerBackgroundColor: '#ffffff',
+                    headerImage: firebase.firestore.FieldValue.delete(),
+                    footerImage: firebase.firestore.FieldValue.delete(),
+                    cacheVersion: timestamp,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: firebase.auth().currentUser.email
+                }, { merge: true });
+
+                // Invalidar cache en todos los usuarios
+                localStorage.setItem('config_updated', timestamp.toString());
+                sessionStorage.removeItem('cmn_config_cache');
+
+                alert('✅ Configuración restaurada a predeterminado.\nSe usarán las imágenes locales del código.\nRecargando...');
+                
+                setTimeout(() => location.reload(), 1000);
+
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error restaurando configuración');
+                console.error('Error restaurando:', error);
+                alert('❌ Error restaurando la configuración: ' + error.message);
+            } finally {
+                overlay.style.display = 'none';
             }
         }
 
