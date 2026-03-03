@@ -74,16 +74,42 @@
     }
 
     /**
+     * Asegurar que Firebase esté inicializado
+     */
+    function ensureFirebaseInitialized() {
+        try {
+            if (typeof firebase === 'undefined') return false;
+            
+            // Si ya hay apps inicializadas, todo OK
+            if (firebase.apps.length > 0) return true;
+            
+            // Intentar inicializar con la config global
+            if (window.FIREBASE_CONFIG) {
+                firebase.initializeApp(window.FIREBASE_CONFIG);
+                console.log('✅ Firebase inicializado desde config-loader');
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            // Si ya estaba inicializado, ignorar error
+            if (error.code === 'app/duplicate-app') return true;
+            console.warn('Error inicializando Firebase:', error);
+            return false;
+        }
+    }
+
+    /**
      * Cargar configuración desde Firebase
      */
     async function loadConfigFromFirebase() {
         try {
-            // Verificar si Firebase está inicializado
-            if (typeof firebase === 'undefined' || !firebase.apps.length) {
-                console.warn('Firebase no inicializado, usando configuración predeterminada');
+            // Asegurar que Firebase esté inicializado
+            if (!ensureFirebaseInitialized()) {
+                console.warn('Firebase no disponible, usando configuración predeterminada');
                 return {
                     config: defaultConfig,
-                    cacheVersion: Date.now()
+                    cacheVersion: 0  // Version 0 para que se actualice cuando Firebase esté disponible
                 };
             }
 
