@@ -29,14 +29,14 @@ service firebase.storage {
       // Validaciones:
       // - Debe ser una imagen válida (jpeg, jpg, png, webp)
       // - Tamaño máximo 2MB
-      // - Solo archivos: header.jpg, footer.jpg, header.png, footer.png
+      // - Formato: header-{timestamp}.ext o footer-{timestamp}.ext o nombres legacy
       allow write: if isAuthenticated()
         && isValidImageFormat()
         && isValidSize()
-        && (imageFile.matches('header\\.(jpg|jpeg|png|webp)')
-            || imageFile.matches('footer\\.(jpg|jpeg|png|webp)'));
+        && (imageFile.matches('header.*\\.(jpg|jpeg|png|webp)')
+            || imageFile.matches('footer.*\\.(jpg|jpeg|png|webp)'));
       
-      // No permitir eliminación
+      // Permitir eliminación de imágenes antiguas
       allow delete: if isAuthenticated();
     }
     

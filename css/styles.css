@@ -57,6 +57,14 @@
     --breakpoint-xl: 1200px;
 }
 
+/* ===== TRANSICIONES PARA CARGA DE CONFIGURACIÓN ===== */
+#logoHeaderImg,
+#logoFooterImg {
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* ===== FIN TRANSICIONES ===== */
+
 /* ===== DEBUG: BORDES DE COLORES PARA VISUALIZAR CONTENEDORES ===== */
 /* ELIMINAR ESTA SECCIÓN CUANDO TERMINES DE DEBUGGEAR */
 /*.container {

@@ -714,6 +714,27 @@
             }
         }
 
+        // Validar archivo de imagen
+        function validarImagen(file) {
+            const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+            const VALID_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            
+            if (!file) return null;
+            
+            if (!VALID_TYPES.includes(file.type)) {
+                alert('❌ Formato no válido. Usa JPG, PNG o WEBP');
+                return null;
+            }
+            
+            if (file.size > MAX_SIZE) {
+                const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+                alert(`❌ Archivo muy grande (${sizeMB}MB). Máximo 2MB`);
+                return null;
+            }
+            
+            return file;
+        }
+
         // Guardar personalización
         async function guardarPersonalizacion(event) {
             event.preventDefault();
@@ -723,24 +744,31 @@
 
             try {
                 const db = firebase.firestore();
+                const timestamp = Date.now();
+                
                 const config = {
                     primaryColor: document.getElementById('inputPrimaryColor').value,
+                    cacheVersion: timestamp, // Para forzar actualización de cache
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     updatedBy: firebase.auth().currentUser.email
                 };
 
-                // Subir imagen header
-                const headerFile = document.getElementById('inputHeaderImage').files[0];
+                // Validar y subir imagen header
+                const headerFile = validarImagen(document.getElementById('inputHeaderImage').files[0]);
                 if (headerFile) {
-                    const headerRef = storage.ref('configuracion/header.' + headerFile.name.split('.').pop());
+                    const ext = headerFile.name.split('.').pop();
+                    // Incluir timestamp en el nombre para cache busting
+                    const headerRef = storage.ref(`configuracion/header-${timestamp}.${ext}`);
                     await headerRef.put(headerFile);
                     config.headerImage = await headerRef.getDownloadURL();
                 }
 
-                // Subir imagen footer
-                const footerFile = document.getElementById('inputFooterImage').files[0];
+                // Validar y subir imagen footer
+                const footerFile = validarImagen(document.getElementById('inputFooterImage').files[0]);
                 if (footerFile) {
-                    const footerRef = storage.ref('configuracion/footer.' + footerFile.name.split('.').pop());
+                    const ext = footerFile.name.split('.').pop();
+                    // Incluir timestamp en el nombre para cache busting
+                    const footerRef = storage.ref(`configuracion/footer-${timestamp}.${ext}`);
                     await footerRef.put(footerFile);
                     config.footerImage = await footerRef.getDownloadURL();
                 }
@@ -748,11 +776,18 @@
                 // Guardar en Firestore
                 await db.collection('configuracion').doc('estilos').set(config, { merge: true });
 
-                alert('✅ Configuración guardada exitosamente');
+                // Invalidar cache en todos los usuarios
+                localStorage.setItem('config_updated', timestamp.toString());
+                sessionStorage.removeItem('cmn_config_cache');
+
+                alert('✅ Configuración guardada exitosamente. Recargando...');
                 
                 // Limpiar inputs de archivo
                 document.getElementById('inputHeaderImage').value = '';
                 document.getElementById('inputFooterImage').value = '';
+                
+                // Recargar para mostrar cambios
+                setTimeout(() => location.reload(), 1000);
                 
             } catch (error) {
                 console.error('Error guardando:', error);

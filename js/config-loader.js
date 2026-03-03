@@ -11,7 +11,7 @@
 
     // Configuración del cache
     const CACHE_KEY = 'cmn_config_cache';
-    const CACHE_TTL = 60 * 60 * 1000; // 1 hora en milisegundos
+    const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
 
     // Configuración predeterminada (fallback)
     const defaultConfig = {
@@ -33,6 +33,14 @@
 
             // Verificar si el cache expiró
             if (now - data.timestamp > CACHE_TTL) {
+                sessionStorage.removeItem(CACHE_KEY);
+                return null;
+            }
+
+            // Verificar si hay una versión más nueva en localStorage (admin actualizó)
+            const lastUpdate = localStorage.getItem('config_updated');
+            if (lastUpdate && parseInt(lastUpdate) > data.timestamp) {
+                console.log('🔄 Nueva configuración disponible, actualizando...');
                 sessionStorage.removeItem(CACHE_KEY);
                 return null;
             }
@@ -96,16 +104,12 @@
      */
     function applyPrimaryColor(color) {
         try {
-            // Aplicar variable CSS
+            // Aplicar variable CSS globalmente - se propaga automáticamente
             document.documentElement.style.setProperty('--primary-color', color);
-            
-            // Aplicar a elementos específicos si existen
-            const buttons = document.querySelectorAll('button[type="submit"], .btn-primary');
-            buttons.forEach(btn => {
-                btn.style.backgroundColor = color;
-            });
+            // También actualizar color secundario para mantener consistencia
+            document.documentElement.style.setProperty('--color-secondary', color);
 
-            console.log('✅ Color primario aplicado:', color);
+            console.log('✅ Color primario aplicado globalmente:', color);
         } catch (error) {
             console.error('Error aplicando color:', error);
         }
@@ -116,24 +120,26 @@
      */
     function applyHeaderImage(imageUrl) {
         try {
-            // Buscar elemento del header
+            // Selector específico para el header
             const headerImg = document.getElementById('logoHeaderImg');
-            const header = document.querySelector('.header');
 
             if (headerImg) {
+                // Agregar clase de loading mientras carga
+                headerImg.style.opacity = '0.5';
+                
                 headerImg.src = imageUrl;
+                
+                headerImg.onload = function() {
+                    this.style.opacity = '1';
+                    console.log('✅ Header image cargada');
+                };
+                
                 headerImg.onerror = function() {
                     console.warn('Error cargando imagen header, usando predeterminada');
                     this.src = defaultConfig.headerImage;
+                    this.style.opacity = '1';
                 };
             }
-
-            if (header) {
-                // Si quieres aplicar como background también
-                // header.style.backgroundImage = `url(${imageUrl})`;
-            }
-
-            console.log('✅ Header image aplicada');
         } catch (error) {
             console.error('Error aplicando header:', error);
         }
@@ -144,20 +150,26 @@
      */
     function applyFooterImage(imageUrl) {
         try {
-            // Buscar elementos del footer
-            const footerImgs = document.querySelectorAll('.footer img, #logoFooterImg, .logo-image');
+            // Selector específico solo para el logo principal del footer
+            const footerImg = document.getElementById('logoFooterImg');
             
-            footerImgs.forEach(img => {
-                if (img.alt && img.alt.toLowerCase().includes('footer')) {
-                    img.src = imageUrl;
-                    img.onerror = function() {
-                        console.warn('Error cargando imagen footer, usando predeterminada');
-                        this.src = defaultConfig.footerImage;
-                    };
-                }
-            });
-
-            console.log('✅ Footer image aplicada');
+            if (footerImg) {
+                // Agregar clase de loading mientras carga
+                footerImg.style.opacity = '0.5';
+                
+                footerImg.src = imageUrl;
+                
+                footerImg.onload = function() {
+                    this.style.opacity = '1';
+                    console.log('✅ Footer image cargada');
+                };
+                
+                footerImg.onerror = function() {
+                    console.warn('Error cargando imagen footer, usando predeterminada');
+                    this.src = defaultConfig.footerImage;
+                    this.style.opacity = '1';
+                };
+            }
         } catch (error) {
             console.error('Error aplicando footer:', error);
         }
@@ -237,6 +249,15 @@
         clearCache: clearCache,
         getDefaultConfig: () => ({ ...defaultConfig })
     };
+
+    // Listener para detectar cambios desde admin (sincronización entre tabs)
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'config_updated') {
+            console.log('🔄 Configuración actualizada desde otra pestaña, recargando...');
+            sessionStorage.removeItem(CACHE_KEY);
+            init();
+        }
+    });
 
     // Auto-inicializar cuando el DOM esté listo
     if (document.readyState === 'loading') {
