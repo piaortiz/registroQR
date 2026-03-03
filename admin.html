@@ -118,13 +118,23 @@
                         </div>
 
                         <!-- Color Primario -->
-                        <div class="form-card full-width">
+                        <div class="form-card">
                             <h3>🎨 Color Primario</h3>
                             <div class="color-picker-group">
                                 <input type="color" id="inputPrimaryColor" value="#161337" onchange="actualizarColorTexto(this.value)">
                                 <input type="text" id="inputPrimaryColorText" value="#161337" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$" onchange="actualizarColorPicker(this.value)">
                             </div>
                             <small style="color: #666;">Este color se aplicará a botones y elementos destacados</small>
+                        </div>
+
+                        <!-- Color de Fondo del Header -->
+                        <div class="form-card">
+                            <h3>🎨 Color de Fondo del Header</h3>
+                            <div class="color-picker-group">
+                                <input type="color" id="inputHeaderBgColor" value="#ffffff" onchange="actualizarHeaderBgTexto(this.value)">
+                                <input type="text" id="inputHeaderBgColorText" value="#ffffff" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$" onchange="actualizarHeaderBgPicker(this.value)">
+                            </div>
+                            <small style="color: #666;">Color de fondo del encabezado (predeterminado: blanco)</small>
                         </div>
                     </div>
 
@@ -690,6 +700,13 @@
                         document.getElementById('demoButton').style.background = config.primaryColor;
                     }
                     
+                    // Cargar color de fondo del header
+                    if (config.headerBackgroundColor) {
+                        document.getElementById('inputHeaderBgColor').value = config.headerBackgroundColor;
+                        document.getElementById('inputHeaderBgColorText').value = config.headerBackgroundColor;
+                        document.getElementById('demoHeader').style.backgroundColor = config.headerBackgroundColor;
+                    }
+                    
                     // Cargar imágenes
                     if (config.headerImage) {
                         document.getElementById('previewHeader').src = config.headerImage;
@@ -770,6 +787,7 @@
                 
                 const config = {
                     primaryColor: document.getElementById('inputPrimaryColor').value,
+                    headerBackgroundColor: document.getElementById('inputHeaderBgColor').value,
                     cacheVersion: timestamp, // Para forzar actualización de cache
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     updatedBy: firebase.auth().currentUser.email
@@ -822,6 +840,9 @@
                 document.getElementById('inputPrimaryColor').value = '#161337';
                 document.getElementById('inputPrimaryColorText').value = '#161337';
                 document.getElementById('demoButton').style.background = '#161337';
+                document.getElementById('inputHeaderBgColor').value = '#ffffff';
+                document.getElementById('inputHeaderBgColorText').value = '#ffffff';
+                document.getElementById('demoHeader').style.backgroundColor = '#ffffff';
                 
                 // Limpiar previews
                 document.getElementById('previewHeader').style.display = 'none';

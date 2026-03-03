@@ -16,6 +16,7 @@
     // Configuración predeterminada (fallback)
     const defaultConfig = {
         primaryColor: '#161337',
+        headerBackgroundColor: '#ffffff',
         headerImage: 'img/Heather.png',
         footerImage: 'img/Pie blanco.png'
     };
@@ -86,6 +87,7 @@
                 console.log('✅ Configuración cargada desde Firebase');
                 return {
                     primaryColor: config.primaryColor || defaultConfig.primaryColor,
+                    headerBackgroundColor: config.headerBackgroundColor || defaultConfig.headerBackgroundColor,
                     headerImage: config.headerImage || defaultConfig.headerImage,
                     footerImage: config.footerImage || defaultConfig.footerImage
                 };
@@ -172,6 +174,21 @@
     }
 
     /**
+     * Aplicar color de fondo del header
+     */
+    function applyHeaderBackgroundColor(color) {
+        try {
+            const header = document.querySelector('.header');
+            if (header) {
+                header.style.backgroundColor = color;
+                console.log('✅ Color de fondo del header aplicado:', color);
+            }
+        } catch (error) {
+            console.error('Error aplicando color de fondo del header:', error);
+        }
+    }
+
+    /**
      * Aplicar imagen de header
      */
     function applyHeaderImage(imageUrl) {
@@ -243,6 +260,10 @@
         // Aplicar cada elemento de la configuración
         if (config.primaryColor) {
             applyPrimaryColor(config.primaryColor);
+        }
+
+        if (config.headerBackgroundColor) {
+            applyHeaderBackgroundColor(config.headerBackgroundColor);
         }
 
         if (config.headerImage) {
