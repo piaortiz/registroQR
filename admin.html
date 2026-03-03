@@ -352,11 +352,11 @@
 
             eventosData = await FirebaseAdmin.getAllEventos();
 
-            // Filtrar solo activos
-            const eventosVisibles = eventosData.filter(e => e.activo);
+            // Mostrar TODOS los eventos (activos e inactivos)
+            const eventosVisibles = eventosData;
 
             if (eventosVisibles.length === 0) {
-                listaDiv.innerHTML = '<p>No hay eventos activos.</p>';
+                listaDiv.innerHTML = '<p>No hay eventos creados. Creá uno nuevo para comenzar.</p>';
                 return;
             }
 
@@ -397,6 +397,10 @@
                         </td>
                         <td style="text-align: center;">
                             <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                                ${evento.activo ? 
+                                    `<button class="btn btn-warning" onclick="toggleEvento('${evento.id}', false)" style="padding: 8px 15px; font-size: 13px;">Desactivar</button>` :
+                                    `<button class="btn btn-success" onclick="toggleEvento('${evento.id}', true)" style="padding: 8px 15px; font-size: 13px;">Activar</button>`
+                                }
                                 <button class="btn btn-info" onclick="verRegistros('${evento.id}', '${evento.nombre}')" style="padding: 8px 15px; font-size: 13px;">
                                     Ver Registros
                                 </button>
@@ -593,7 +597,7 @@
 
                 await cargarEstadisticas();
                 await cargarEventos();
-                alert('Evento creado exitosamente\n\nEl evento está desactivado. Podés activarlo desde la lista de eventos.');
+                alert('✅ Evento creado exitosamente.\n\nEl evento está INACTIVO. Activalo desde el botón "Activar" en la lista.');
             } catch (error) {
                 alert('Error: ' + error.message);
             }
