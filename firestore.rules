@@ -43,12 +43,13 @@ service cloud.firestore {
       // Subcolección de registros por evento
       match /registros/{dni} {
         // Permitir crear registro si:
-        // 1. El DNI coincide con el documento (evita manipulación)
-        // 2. El evento está activo
-        // 3. El DNI es válido (7-8 dígitos)
-        // 4. Tiene todos los campos requeridos
-        // DESACTIVADO TEMPORALMENTE
-        allow create: if false;
+        // 1. El evento está activo
+        // 2. El DNI es válido (7-8 dígitos)
+        // 3. El DNI del documento coincide con el path (evita manipulación)
+        allow create: if isEventoActivo(eventoId)
+          && isValidDNI(dni)
+          && request.resource.data.dni == dni
+          && request.resource.data.keys().hasAll(['dni', 'nombreCompleto', 'fechaNacimiento', 'email', 'telefono']);
         
         // Permitir lectura pública de un DNI específico (para verificar duplicados)
         // Solo si el evento está activo
