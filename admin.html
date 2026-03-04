@@ -121,8 +121,8 @@
                         <div class="form-card">
                             <h3>🎨 Color Primario</h3>
                             <div class="color-picker-group">
-                                <input type="color" id="inputPrimaryColor" value="#161337" onchange="actualizarColorTexto(this.value)">
-                                <input type="text" id="inputPrimaryColorText" value="#161337" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$" onchange="actualizarColorPicker(this.value)">
+                                <input type="color" id="inputPrimaryColor" value="#a69867" onchange="actualizarColorTexto(this.value)">
+                                <input type="text" id="inputPrimaryColorText" value="#a69867" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$" onchange="actualizarColorPicker(this.value)">
                             </div>
                             <small style="color: #666;">Este color se aplicará a botones y elementos destacados</small>
                         </div>
@@ -130,11 +130,15 @@
                         <!-- Color de Fondo del Header -->
                         <div class="form-card">
                             <h3>🎨 Color de Fondo del Header</h3>
-                            <div class="color-picker-group">
-                                <input type="color" id="inputHeaderBgColor" value="#ffffff" onchange="actualizarHeaderBgTexto(this.value)">
-                                <input type="text" id="inputHeaderBgColorText" value="#ffffff" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$" onchange="actualizarHeaderBgPicker(this.value)">
+                            <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;">
+                                <input type="checkbox" id="checkHeaderBgDefault" onchange="toggleHeaderBgPicker(this.checked)" style="width:16px;height:16px;">
+                                <span style="color:#444;font-size:0.9rem;">Usar degradado automático del color primario (por defecto)</span>
+                            </label>
+                            <div class="color-picker-group" id="headerBgPickerGroup">
+                                <input type="color" id="inputHeaderBgColor" value="#a69867" onchange="actualizarHeaderBgTexto(this.value)">
+                                <input type="text" id="inputHeaderBgColorText" value="#a69867" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$" onchange="actualizarHeaderBgPicker(this.value)">
                             </div>
-                            <small style="color: #666;">Color de fondo del encabezado (predeterminado: blanco)</small>
+                            <small style="color: #666;">Si está marcado, el header usará un degradado generado desde el color primario</small>
                         </div>
                     </div>
 
@@ -684,6 +688,31 @@
             }
         }
 
+        // Header background color picker
+        function actualizarHeaderBgTexto(color) {
+            document.getElementById('inputHeaderBgColorText').value = color;
+            document.getElementById('demoHeader').style.background = color;
+        }
+
+        function actualizarHeaderBgPicker(color) {
+            if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                document.getElementById('inputHeaderBgColor').value = color;
+                document.getElementById('demoHeader').style.background = color;
+            }
+        }
+
+        // Mostrar/ocultar picker según checkbox
+        function toggleHeaderBgPicker(isDefault) {
+            const group = document.getElementById('headerBgPickerGroup');
+            group.style.display = isDefault ? 'none' : 'flex';
+            if (isDefault) {
+                document.getElementById('demoHeader').style.background = 'linear-gradient(135deg, #7d724d 0%, #a69867 50%, #c4b888 100%)';
+            } else {
+                const color = document.getElementById('inputHeaderBgColor').value;
+                document.getElementById('demoHeader').style.background = color;
+            }
+        }
+
         // Cargar configuración actual desde Firebase
         async function cargarConfiguracionActual() {
             try {
@@ -701,10 +730,18 @@
                     }
                     
                     // Cargar color de fondo del header
-                    if (config.headerBackgroundColor) {
+                    const hasBgColor = config.headerBackgroundColor && config.headerBackgroundColor.trim() !== '';
+                    if (hasBgColor) {
                         document.getElementById('inputHeaderBgColor').value = config.headerBackgroundColor;
                         document.getElementById('inputHeaderBgColorText').value = config.headerBackgroundColor;
                         document.getElementById('demoHeader').style.backgroundColor = config.headerBackgroundColor;
+                        document.getElementById('checkHeaderBgDefault').checked = false;
+                        document.getElementById('headerBgPickerGroup').style.display = 'flex';
+                    } else {
+                        document.getElementById('checkHeaderBgDefault').checked = true;
+                        document.getElementById('headerBgPickerGroup').style.display = 'none';
+                        document.getElementById('demoHeader').style.background = 'linear-gradient(135deg, #7d724d 0%, #a69867 50%, #c4b888 100%)';
+                    }
                     }
                     
                     // Cargar imágenes (si no hay personalizadas, mostrar las locales por defecto)
@@ -787,9 +824,10 @@
                 const db = firebase.firestore();
                 const timestamp = Date.now();
                 
+                const useDefaultGradient = document.getElementById('checkHeaderBgDefault').checked;
                 const config = {
                     primaryColor: document.getElementById('inputPrimaryColor').value,
-                    headerBackgroundColor: document.getElementById('inputHeaderBgColor').value,
+                    headerBackgroundColor: useDefaultGradient ? '' : document.getElementById('inputHeaderBgColor').value,
                     cacheVersion: timestamp, // Para forzar actualización de cache
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     updatedBy: firebase.auth().currentUser.email
@@ -848,8 +886,8 @@
                 // Al eliminar headerImage y footerImage, config-loader usará los locales:
                 // img/Heather.png (header) y img/Pie blanco.png (footer)
                 await db.collection('configuracion').doc('estilos').set({
-                    primaryColor: '#161337',
-                    headerBackgroundColor: '#ffffff',
+                    primaryColor: '#a69867',
+                    headerBackgroundColor: '',
                     headerImage: firebase.firestore.FieldValue.delete(),
                     footerImage: firebase.firestore.FieldValue.delete(),
                     cacheVersion: timestamp,
