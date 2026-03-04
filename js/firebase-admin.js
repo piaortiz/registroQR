@@ -295,7 +295,19 @@ function exportarCSV(registros, nombreEvento) {
         'IP',
         'Sincronizado'
     ];
-    
+
+    const formatFecha = (ts) => {
+        if (!ts) return '';
+        const d = new Date(ts);
+        const pad = n => String(n).padStart(2, '0');
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+
+    const sanitize = (val) => {
+        if (val === null || val === undefined) return '';
+        return String(val).replace(/"/g, '""');
+    };
+
     const rows = registros.map(r => [
         r.dni,
         r.nombreCompleto,
@@ -304,24 +316,34 @@ function exportarCSV(registros, nombreEvento) {
         r.telefono || '',
         r.fechaEvento || '',
         r.horaEvento || '',
-        r.timestamp ? new Date(r.timestamp).toLocaleString() : '',
+        formatFecha(r.timestamp),
         r.estado || 'ACTIVO',
         r.ipAddress || '',
         r.syncedToSheets ? 'Sí' : 'No'
     ]);
-    
-    let csv = headers.join(',') + '\n';
+
+    // Separador ; para compatibilidad con Excel en español
+    // BOM UTF-8 para que Excel interprete tildes y ñ correctamente
+    const SEP = ';';
+    const BOM = '\uFEFF';
+    let csv = BOM + headers.map(h => `"${sanitize(h)}"`).join(SEP) + '\r\n';
     rows.forEach(row => {
-        csv += row.map(field => `"${field}"`).join(',') + '\n';
+        csv += row.map(field => `"${sanitize(field)}"`).join(SEP) + '\r\n';
     });
-    
+
+    // Nombre de archivo legible con fecha
+    const ahora = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const fechaArchivo = `${ahora.getFullYear()}${pad(ahora.getMonth()+1)}${pad(ahora.getDate())}_${pad(ahora.getHours())}${pad(ahora.getMinutes())}`;
+    const nombreArchivo = `registros_${nombreEvento.replace(/\s+/g, '_')}_${fechaArchivo}.csv`;
+
     // Descargar archivo
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    
+
     link.setAttribute('href', url);
-    link.setAttribute('download', `registros_${nombreEvento}_${Date.now()}.csv`);
+    link.setAttribute('download', nombreArchivo);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
