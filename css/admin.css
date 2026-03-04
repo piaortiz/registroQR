@@ -548,9 +548,23 @@ tr:hover td { background: var(--surface-2); }
     box-shadow: -4px 0 0 var(--gold);
 }
 
+.eventos-table tbody tr.evento-activo {
+    background: #edf7f2;
+}
+
 .eventos-table tbody tr.evento-activo td:first-child {
     border-left: 4px solid var(--success);
     padding-left: 12px;
+}
+
+.eventos-table tbody tr.evento-activo:hover {
+    background: #daf0e6;
+    box-shadow: -4px 0 0 var(--success);
+}
+
+.eventos-table tbody tr.evento-inactivo {
+    background: var(--surface);
+    opacity: 0.82;
 }
 
 .eventos-table tbody tr.evento-inactivo td:first-child {
