@@ -11,15 +11,12 @@
 <body>
     <!-- PANTALLA DE LOGIN -->
     <div class="login-container" id="loginScreen">
-        <h1>Panel de Administración</h1>
-        <h3 style="text-align: center; color: #666; margin-bottom: 20px;">Casino Magic</h3>
-        <input type="email" id="emailInput" placeholder="Email" autocomplete="email" style="margin-bottom: 10px;">
+        <h1>Casino Magic</h1>
+        <h3>Panel de Administración</h3>
+        <input type="email" id="emailInput" placeholder="Email" autocomplete="email">
         <input type="password" id="passwordInput" placeholder="Contraseña" autocomplete="current-password">
         <button onclick="login()">Ingresar</button>
-        <div id="loginError" style="color: red; text-align: center; margin-top: 10px;"></div>
-        <p style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">
-            Usar credenciales de Firebase Authentication
-        </p>
+        <div id="loginError" class="alert alert-danger" style="display:none; margin-top:12px;"></div>
     </div>
 
     <!-- PANEL DE ADMINISTRACIÓN -->
@@ -28,7 +25,7 @@
         <div class="admin-header">
             <div>
                 <h1>Panel de Administración</h1>
-                <p style="color: #666;">Casino Magic - Gestión de Eventos</p>
+                <p>Casino Magic · Gestión de Eventos</p>
             </div>
             <div>
                 <button class="btn btn-primary" id="btnNuevoEvento" onclick="mostrarModalNuevoEvento()">+ Nuevo
@@ -278,7 +275,8 @@
 
             if (!email || !password) {
                 errorDiv.textContent = 'Ingrese email y contraseña';
-                setTimeout(() => errorDiv.textContent = '', 3000);
+                errorDiv.style.display = 'flex';
+                setTimeout(() => { errorDiv.textContent = ''; errorDiv.style.display = 'none'; }, 3000);
                 return;
             }
 
@@ -299,7 +297,8 @@
                     mensaje = 'Demasiados intentos. Espere un momento';
                 }
                 errorDiv.textContent = mensaje;
-                setTimeout(() => errorDiv.textContent = '', 5000);
+                errorDiv.style.display = 'flex';
+                setTimeout(() => { errorDiv.textContent = ''; errorDiv.style.display = 'none'; }, 5000);
             }
         }
 
