@@ -119,10 +119,17 @@
             if (doc.exists) {
                 const config = doc.data();
                 console.log('✅ Configuración cargada desde Firebase');
+                // Si headerBackgroundColor es blanco (#ffffff) o vacío, no sobreescribir el degradado CSS
+                const rawBgColor = config.headerBackgroundColor || '';
+                const isWhiteOrEmpty = !rawBgColor || /^#?fff(fff)?$/i.test(rawBgColor.trim()) || rawBgColor.trim() === 'rgb(255,255,255)';
+                // Si primaryColor es el viejo default (#161337), no sobreescribir el nuevo default
+                const OLD_PRIMARY_DEFAULTS = ['#161337', '#e5401f'];
+                const rawPrimary = config.primaryColor || '';
+                const isOldDefault = !rawPrimary || OLD_PRIMARY_DEFAULTS.includes(rawPrimary.trim().toLowerCase());
                 return {
                     config: {
-                        primaryColor: config.primaryColor || defaultConfig.primaryColor,
-                        headerBackgroundColor: config.headerBackgroundColor || defaultConfig.headerBackgroundColor,
+                        primaryColor: isOldDefault ? defaultConfig.primaryColor : rawPrimary,
+                        headerBackgroundColor: isWhiteOrEmpty ? '' : rawBgColor,
                         headerImage: config.headerImage || defaultConfig.headerImage,
                         footerImage: config.footerImage || defaultConfig.footerImage
                     },
@@ -317,13 +324,25 @@
             return;
         }
 
-        // Aplicar cada elemento de la configuración
+        const OLD_PRIMARY_DEFAULTS = ['#161337', '#e5401f'];
+
+        // Aplicar color primario (ignorar viejos defaults que ya no corresponden)
         if (config.primaryColor) {
-            applyPrimaryColor(config.primaryColor);
+            const isOldDefault = OLD_PRIMARY_DEFAULTS.includes(config.primaryColor.trim().toLowerCase());
+            if (!isOldDefault) {
+                applyPrimaryColor(config.primaryColor);
+            } else {
+                applyPrimaryColor(defaultConfig.primaryColor);
+            }
         }
 
+        // Aplicar color de fondo del header (ignorar blanco — usar degradado CSS)
         if (config.headerBackgroundColor) {
-            applyHeaderBackgroundColor(config.headerBackgroundColor);
+            const bg = config.headerBackgroundColor.trim();
+            const isWhiteOrEmpty = /^#?fff(fff)?$/i.test(bg) || bg === 'rgb(255,255,255)';
+            if (!isWhiteOrEmpty) {
+                applyHeaderBackgroundColor(bg);
+            }
         }
 
         if (config.headerImage) {
