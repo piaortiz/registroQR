@@ -85,16 +85,16 @@
         <!-- Tab Content: Personalización -->
         <div id="tab-personalizacion" class="tab-content">
             <div class="content-section">
-                <h2>🎨 Personalización del Sistema</h2>
-                <p style="color: #666; margin-bottom: 20px;">Configura la apariencia del sistema de registro</p>
+                <h2>Personalización del Sistema</h2>
+                <p class="section-desc">Configura la apariencia del sistema de registro</p>
 
                 <form id="formPersonalizacion" onsubmit="guardarPersonalizacion(event)">
                     <div class="personalizacion-grid">
                         <!-- Imagen Header -->
                         <div class="form-card">
-                            <h3>🖼️ Imagen del Header</h3>
+                            <h3>Imagen del Header</h3>
                             <input type="file" id="inputHeaderImage" accept="image/jpeg,image/jpg,image/png,image/webp" onchange="previewImage('header', this)">
-                            <small style="color: #666;">Tamaño recomendado: 800x450px (ratio 16:9). Max 2MB.</small>
+                            <small>800×450 px recomendado (16:9). Máx. 2 MB.</small>
                             <div class="image-preview-container">
                                 <img id="previewHeader" class="image-preview" style="display:none;" alt="Preview Header">
                             </div>
@@ -102,9 +102,9 @@
 
                         <!-- Imagen Footer -->
                         <div class="form-card">
-                            <h3>🖼️ Imagen del Footer</h3>
+                            <h3>Imagen del Footer</h3>
                             <input type="file" id="inputFooterImage" accept="image/jpeg,image/jpg,image/png,image/webp" onchange="previewImage('footer', this)">
-                            <small style="color: #666;">Tamaño recomendado: 600x100px (ancho x alto). Max 2MB.</small>
+                            <small>600×100 px recomendado. Máx. 2 MB.</small>
                             <div class="image-preview-container">
                                 <img id="previewFooter" class="image-preview" style="display:none;" alt="Preview Footer">
                             </div>
@@ -112,32 +112,32 @@
 
                         <!-- Color Primario -->
                         <div class="form-card">
-                            <h3>🎨 Color Primario</h3>
+                            <h3>Color Primario</h3>
                             <div class="color-picker-group">
                                 <input type="color" id="inputPrimaryColor" value="#a69867" onchange="actualizarColorTexto(this.value)">
                                 <input type="text" id="inputPrimaryColorText" value="#a69867" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$" onchange="actualizarColorPicker(this.value)">
                             </div>
-                            <small style="color: #666;">Este color se aplicará a botones y elementos destacados</small>
+                            <small>Se aplica a botones y elementos destacados</small>
                         </div>
 
                         <!-- Color de Fondo del Header -->
                         <div class="form-card">
-                            <h3>🎨 Color de Fondo del Header</h3>
-                            <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;">
-                                <input type="checkbox" id="checkHeaderBgDefault" onchange="toggleHeaderBgPicker(this.checked)" style="width:16px;height:16px;">
-                                <span style="color:#444;font-size:0.9rem;">Usar degradado automático del color primario (por defecto)</span>
+                            <h3>Fondo del Header</h3>
+                            <label>
+                                <input type="checkbox" id="checkHeaderBgDefault" onchange="toggleHeaderBgPicker(this.checked)">
+                                <span>Usar degradado automático del color primario</span>
                             </label>
                             <div class="color-picker-group" id="headerBgPickerGroup">
                                 <input type="color" id="inputHeaderBgColor" value="#a69867" onchange="actualizarHeaderBgTexto(this.value)">
                                 <input type="text" id="inputHeaderBgColorText" value="#a69867" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$" onchange="actualizarHeaderBgPicker(this.value)">
                             </div>
-                            <small style="color: #666;">Si está marcado, el header usará un degradado generado desde el color primario</small>
+                            <small>Si está marcado, el header usará un degradado generado desde el color primario</small>
                         </div>
                     </div>
 
                     <!-- Vista Previa -->
                     <div class="preview-section">
-                        <h3>👁️ Vista Previa</h3>
+                        <span class="preview-label">Vista Previa</span>
                         <div class="preview-container">
                             <div id="demoHeader" class="demo-header"></div>
                             <div class="demo-content">
@@ -150,10 +150,10 @@
                     <!-- Botones -->
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary" id="btnGuardarPersonalizacion">
-                            💾 Guardar Cambios
+                            Guardar Cambios
                         </button>
                         <button type="button" class="btn btn-secondary" onclick="restaurarConfiguracion()">
-                            🔄 Restaurar Predeterminado
+                            Restaurar Predeterminado
                         </button>
                     </div>
                 </form>
