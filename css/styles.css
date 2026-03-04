@@ -1,21 +1,24 @@
 /* Variables para la paleta de colores */
 :root {
     /* Color primario personalizable */
-    --primary-color: #e5401f;
+    --primary-color: #a69867;
     
     /* Colores principales */
-    /* Colores principales - Base #e5401f */
-    --color-primary: #c2361a;
+    /* Colores principales - Base #a69867 */
+    --color-primary: #7d724d;
     /* Más oscuro */
-    --color-secondary: #e5401f;
+    --color-secondary: #a69867;
     /* Base solicitada */
-    --color-accent: #f26d52;
+    --color-accent: #c4b888;
     /* Más claro */
 
     /* Versiones con transparencia */
-    --color-primary-light: rgba(194, 54, 26, 0.1);
-    --color-secondary-light: rgba(229, 64, 31, 0.1);
-    --color-accent-light: rgba(242, 109, 82, 0.1);
+    --color-primary-light: rgba(125, 114, 77, 0.1);
+    --color-secondary-light: rgba(166, 152, 103, 0.1);
+    --color-accent-light: rgba(196, 184, 136, 0.1);
+
+    /* Degradado del header basado en color primario */
+    --header-gradient: linear-gradient(135deg, #7d724d 0%, #a69867 50%, #c4b888 100%);
 
     /* Colores base de la UI */
     --color-white: #ffffff;
@@ -242,10 +245,10 @@ body {
     }
 }
 
-/* Nueva cabecera con fondo turquesa */
+/* Cabecera con degradado del color primario */
 .header {
-    background: var(--color-white);
-    color: var(--color-primary);
+    background: var(--header-gradient);
+    color: var(--color-white);
     padding: 0;
     margin: 0;
     position: relative;

@@ -15,8 +15,8 @@
 
     // Configuración predeterminada (fallback)
     const defaultConfig = {
-        primaryColor: '#161337',
-        headerBackgroundColor: '#ffffff',
+        primaryColor: '#a69867',
+        headerBackgroundColor: '',
         headerImage: 'img/Heather.png',
         footerImage: 'img/Pie blanco.png'
     };
@@ -206,6 +206,10 @@
             root.style.setProperty('--color-secondary-light', `rgba(${baseRgb.r}, ${baseRgb.g}, ${baseRgb.b}, 0.1)`);
             root.style.setProperty('--color-accent-light', `rgba(${lighterRgb.r}, ${lighterRgb.g}, ${lighterRgb.b}, 0.1)`);
 
+            // Actualizar degradado del header basado en el nuevo color primario
+            const gradient = `linear-gradient(135deg, ${rgbToHex(darkerRgb)} 0%, ${color} 50%, ${rgbToHex(lighterRgb)} 100%)`;
+            root.style.setProperty('--header-gradient', gradient);
+
             console.log('✅ Color primario y variantes aplicados:', {
                 primary: rgbToHex(darkerRgb),
                 secondary: color,
@@ -223,8 +227,21 @@
         try {
             const header = document.querySelector('.header');
             if (header) {
-                header.style.backgroundColor = color;
-                console.log('✅ Color de fondo del header aplicado:', color);
+                // Si es un degradado (contiene 'gradient'), aplicar como background
+                // Si es un color sólido, generar degradado automáticamente
+                if (color.includes('gradient')) {
+                    header.style.background = color;
+                } else {
+                    // Generar degradado a partir del color sólido
+                    const baseRgb = hexToRgb(color);
+                    const darkerRgb = adjustBrightness(baseRgb, 0.75);
+                    const lighterRgb = adjustBrightness(baseRgb, 1.25);
+                    const gradient = `linear-gradient(135deg, ${rgbToHex(darkerRgb)} 0%, ${color} 50%, ${rgbToHex(lighterRgb)} 100%)`;
+                    header.style.background = gradient;
+                    // Actualizar variable CSS del degradado
+                    document.documentElement.style.setProperty('--header-gradient', gradient);
+                }
+                console.log('✅ Degradado del header aplicado:', color);
             }
         } catch (error) {
             console.error('Error aplicando color de fondo del header:', error);
