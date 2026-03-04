@@ -314,14 +314,14 @@ body {
 }
 
 .btn-secondary {
-    background: rgba(255,255,255,0.15);
-    color: #e8dfc4;
-    border-color: rgba(196,184,136,0.35);
+    background: var(--surface);
+    color: var(--text-secondary);
+    border-color: var(--border);
 }
 .btn-secondary:hover {
-    background: rgba(255,255,255,0.22);
-    color: #f5edd8;
-    border-color: rgba(196,184,136,0.6);
+    background: var(--surface-3);
+    color: var(--text-primary);
+    border-color: var(--gold);
 }
 
 /* Buttons inside dark header get light styling */
@@ -1053,52 +1053,115 @@ tr:hover td { background: var(--surface-2); }
 }
 
 .preview-container {
-    background: var(--bg);
+    background: #f4f4f8;
     border-radius: var(--radius-sm);
     overflow: hidden;
     border: 1px solid var(--border-soft);
+    display: flex;
+    flex-direction: column;
 }
 
 .demo-header {
-    height: 120px;
+    height: 130px;
     background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
     background-size: cover;
     background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
 }
 
-.demo-content {
+.demo-header-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.demo-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 20px;
+    background: #f4f4f8;
+}
+
+.demo-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 24px 28px;
+    width: 100%;
+    max-width: 320px;
+    box-shadow: 0 2px 18px rgba(0,0,0,0.09);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.demo-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1a1712;
     text-align: center;
-    padding: 32px 0;
-    background: var(--surface-2);
+    margin: 0;
+}
+
+.demo-input-wrap {
+    width: 100%;
+}
+
+.demo-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #d4c9b2;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    color: #b0a090;
+    background: #faf8f4;
+    box-sizing: border-box;
+    text-align: center;
+    letter-spacing: 0.06em;
 }
 
 .demo-button {
-    padding: 13px 44px;
+    width: 100%;
+    padding: 11px 0;
     background: linear-gradient(135deg, var(--gold-dark), var(--gold));
     color: #fff8ee;
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: 8px;
     font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.82rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: filter 0.2s, transform 0.18s, box-shadow 0.2s;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
+    transition: filter 0.2s;
 }
 
 .demo-button:hover {
     filter: brightness(1.08);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-gold);
 }
 
 .demo-footer {
-    height: 60px;
+    height: 56px;
     background: var(--surface);
     border-top: 1px solid var(--border-soft);
-    background-size: cover;
-    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.demo-footer-img {
+    max-height: 44px;
+    max-width: 90%;
+    object-fit: contain;
 }
 
 /* ─── FORM ACTIONS ───────────────────────────────────────────────── */

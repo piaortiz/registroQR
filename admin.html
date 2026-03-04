@@ -137,13 +137,23 @@
 
                     <!-- Vista Previa -->
                     <div class="preview-section">
-                        <span class="preview-label">Vista Previa</span>
+                        <span class="preview-label">Vista Previa — Página de Registro</span>
                         <div class="preview-container">
-                            <div id="demoHeader" class="demo-header"></div>
-                            <div class="demo-content">
-                                <button class="demo-button" id="demoButton">Botón de ejemplo</button>
+                            <div id="demoHeader" class="demo-header">
+                                <img id="demoHeaderImg" class="demo-header-img" src="" alt="" style="display:none;">
                             </div>
-                            <div id="demoFooter" class="demo-footer"></div>
+                            <div class="demo-body">
+                                <div class="demo-card">
+                                    <p class="demo-title">Participá de los sorteos</p>
+                                    <div class="demo-input-wrap">
+                                        <div class="demo-input">Ej: 12345678</div>
+                                    </div>
+                                    <button class="demo-button" id="demoButton">CONTINUAR</button>
+                                </div>
+                            </div>
+                            <div id="demoFooter" class="demo-footer">
+                                <img id="demoFooterImg" class="demo-footer-img" src="" alt="" style="display:none;">
+                            </div>
                         </div>
                     </div>
 
@@ -652,15 +662,15 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const preview = document.getElementById('preview' + tipo.charAt(0).toUpperCase() + tipo.slice(1));
-                const demo = document.getElementById('demo' + tipo.charAt(0).toUpperCase() + tipo.slice(1));
+                const demoImg = document.getElementById('demo' + tipo.charAt(0).toUpperCase() + tipo.slice(1) + 'Img');
                 
                 preview.src = e.target.result;
                 preview.style.display = 'block';
-                
-                demo.style.backgroundImage = `url(${e.target.result})`;
-                demo.style.backgroundSize = 'contain';
-                demo.style.backgroundRepeat = 'no-repeat';
-                demo.style.backgroundPosition = 'center';
+
+                if (demoImg) {
+                    demoImg.src = e.target.result;
+                    demoImg.style.display = 'block';
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -740,20 +750,16 @@
                     document.getElementById('previewHeader').src = headerImgSrc;
                     document.getElementById('previewHeader').style.display = 'block';
                     document.getElementById('previewHeader').title = isHeaderCustom ? 'Imagen personalizada (Cloudinary)' : 'Imagen local por defecto';
-                    document.getElementById('demoHeader').style.backgroundImage = `url(${headerImgSrc})`;
-                    document.getElementById('demoHeader').style.backgroundSize = 'contain';
-                    document.getElementById('demoHeader').style.backgroundRepeat = 'no-repeat';
-                    document.getElementById('demoHeader').style.backgroundPosition = 'center';
+                    const demoHImg = document.getElementById('demoHeaderImg');
+                    if (demoHImg) { demoHImg.src = headerImgSrc; demoHImg.style.display = 'block'; }
                     
                     const footerImgSrc = config.footerImage || 'img/Pie blanco.png';
                     const isFooterCustom = !!config.footerImage;
                     document.getElementById('previewFooter').src = footerImgSrc;
                     document.getElementById('previewFooter').style.display = 'block';
                     document.getElementById('previewFooter').title = isFooterCustom ? 'Imagen personalizada (Cloudinary)' : 'Imagen local por defecto';
-                    document.getElementById('demoFooter').style.backgroundImage = `url(${footerImgSrc})`;
-                    document.getElementById('demoFooter').style.backgroundSize = 'contain';
-                    document.getElementById('demoFooter').style.backgroundRepeat = 'no-repeat';
-                    document.getElementById('demoFooter').style.backgroundPosition = 'center';
+                    const demoFImg = document.getElementById('demoFooterImg');
+                    if (demoFImg) { demoFImg.src = footerImgSrc; demoFImg.style.display = 'block'; }
                 }
             } catch (error) {
                 console.error('Error cargando configuración:', error);
