@@ -133,8 +133,14 @@ async function createRegistro(registroData) {
             Object.entries(baseData).filter(([_, value]) => value !== undefined && value !== null)
         );
         
-        // Guardar en Firestore
-        await docRef.set(dataToSave);
+        // Guardar en Firestore e incrementar contador atómicamente
+        const eventoRef = db.collection('eventos').doc(eventoId);
+        await Promise.all([
+            docRef.set(dataToSave),
+            eventoRef.update({
+                totalRegistros: firebase.firestore.FieldValue.increment(1)
+            })
+        ]);
         
         debugLog('✅ Registro creado:', dni);
         

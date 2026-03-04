@@ -1178,6 +1178,23 @@ tr:hover td { background: var(--surface-2); }
     letter-spacing: 0.06em;
 }
 
+.btn-sync-counters {
+    background: none;
+    border: none;
+    color: var(--text-subtle);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+    letter-spacing: 0.02em;
+}
+.btn-sync-counters:hover {
+    color: var(--gold-dark);
+    background: var(--gold-pale);
+}
+
 /* ================================================================
    ANIMATIONS
    ================================================================ */

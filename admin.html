@@ -46,6 +46,10 @@
         <div class="cards-grid" id="statsGrid">
             <!-- Se llenan dinámicamente -->
         </div>
+        <!-- Botón de sincronización de contadores (usar una sola vez si los contadores no coinciden) -->
+        <div id="syncCountersRow" style="text-align:right; margin-bottom: 8px; margin-top: -8px;">
+            <button class="btn-sync-counters" title="Recalcula el contador totalRegistros de cada evento leyendo todos los registros. Usar solo si los números no coinciden." onclick="sincronizarContadores()">↺ Sincronizar contadores</button>
+        </div>
 
         <!-- Lista de Eventos -->
         <div class="content-section">
@@ -333,8 +337,7 @@
                     console.log(`ℹ️ Se corrigió automáticamente: solo el evento "${eventoCorregido}" está activo`);
                 }
 
-                // Cargar datos
-                await cargarEstadisticas();
+                // Cargar datos (cargarEventos llama cargarEstadisticas internamente)
                 await cargarEventos();
             } catch (error) {
                 console.error('❌ Error inicializando panel:', error);
@@ -347,19 +350,21 @@
 
         // Cargar estadísticas
         async function cargarEstadisticas() {
-            const statsGrid = document.getElementById('statsGrid');
-            const eventos = await FirebaseAdmin.getAllEventos();
+            // Reutilizar eventosData si ya fue cargado (evitar doble lectura)
+            const eventos = eventosData && eventosData.length > 0
+                ? eventosData
+                : await FirebaseAdmin.getAllEventos();
 
             let totalRegistros = 0;
             let eventosActivos = 0;
 
             for (const evento of eventos) {
-                const stats = await FirebaseAdmin.getEstadisticasEvento(evento.id);
-                totalRegistros += stats.total;
+                // Lee del campo totalRegistros del doc (1 lectura por evento, ya en memoria si eventosData)
+                totalRegistros += (evento.totalRegistros || 0);
                 if (evento.activo) eventosActivos++;
             }
 
-            statsGrid.innerHTML = `
+            document.getElementById('statsGrid').innerHTML = `
                 <div class="stat-card" onclick="verTodosRegistros()" style="cursor: pointer;" title="Ver todos los registros">
                     <h3>Total Registros</h3>
                     <div class="number">${totalRegistros}</div>
@@ -385,12 +390,12 @@
             let html = '<div class="eventos-table-wrapper"><table class="eventos-table"><thead><tr><th>Evento</th><th>Período</th><th>Estado</th><th>Registros</th><th style="text-align: center;">Acciones</th></tr></thead><tbody>';
 
             for (const evento of eventosVisibles) {
-                const stats = await FirebaseAdmin.getEstadisticasEvento(evento.id);
+                // Usar campo totalRegistros del doc del evento (0 lecturas extra)
+                const total = evento.totalRegistros || 0;
                 const fechaInicio = evento.fechaInicio?.toDate ? evento.fechaInicio.toDate().toLocaleDateString('es-AR') : 'N/A';
                 const fechaFin = evento.fechaFin?.toDate ? evento.fechaFin.toDate().toLocaleDateString('es-AR') : 'N/A';
 
                 const estadoClass = evento.activo ? 'evento-activo' : 'evento-inactivo';
-                // Removemos iconos también aquí si quedaban
 
                 html += `
                     <tr class="${estadoClass}">
@@ -413,7 +418,7 @@
                         </td>
                         <td>
                             <div class="cell-participantes">
-                                <strong>${stats.total}</strong>
+                                <strong>${total}</strong>
                                 <div>participantes</div>
                             </div>
                         </td>
@@ -430,6 +435,9 @@
 
             html += '</tbody></table></div>';
             listaDiv.innerHTML = html;
+
+            // Actualizar stats con los datos ya en memoria (sin lecturas extra)
+            await cargarEstadisticas();
         }
 
         // Toggle evento activo/inactivo
@@ -463,8 +471,7 @@
 
                 // Activar o desactivar el evento seleccionado
                 await FirebaseAdmin.toggleEventoActivo(eventoId, activo);
-                await cargarEstadisticas();
-                await cargarEventos();
+                await cargarEventos(); // cargarEventos actualiza stats internamente
 
                 const mensaje = activo ? 'Evento activado exitosamente' : 'Evento desactivado';
                 alert(mensaje);
@@ -613,14 +620,31 @@
                 document.getElementById('nuevoEventoFechaFin').value = '';
                 document.getElementById('nuevoEventoDescripcion').value = '';
 
-                await cargarEstadisticas();
-                await cargarEventos();
+                await cargarEventos(); // cargarEventos actualiza stats internamente
                 alert('✅ Evento creado exitosamente.\n\nEl evento está INACTIVO. Activalo desde el botón "Activar" en la lista.');
             } catch (error) {
                 alert('Error: ' + error.message);
             }
         }
 
+        // Recalcular contadores (usar si los números no coinciden con la realidad)
+        async function sincronizarContadores() {
+            const btn = document.querySelector('.btn-sync-counters');
+            const original = btn.textContent;
+            btn.textContent = 'Calculando...';
+            btn.disabled = true;
+            try {
+                const counts = await FirebaseAdmin.recalcularContadores();
+                const resumen = counts.map(c => `${c.id}: ${c.total}`).join('\n');
+                alert(`✅ Contadores actualizados:\n${resumen}`);
+                await cargarEventos();
+            } catch (e) {
+                alert('❌ Error: ' + e.message);
+            } finally {
+                btn.textContent = original;
+                btn.disabled = false;
+            }
+        }
 
         // ========== FUNCIONES DE PERSONALIZACIÓN ==========
 

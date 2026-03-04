@@ -215,9 +215,26 @@ async function eliminarEvento(eventoId) {
 }
 
 /**
- * Obtener estadísticas de un evento
+ * Obtener estadísticas de un evento (OPTIMIZADO - lee solo el doc del evento)
+ * Usa el campo 'totalRegistros' que se mantiene con FieldValue.increment()
  */
 async function getEstadisticasEvento(eventoId) {
+    try {
+        const db = firebase.firestore();
+        const doc = await db.collection('eventos').doc(eventoId).get();
+        const total = doc.exists ? (doc.data().totalRegistros || 0) : 0;
+        return { total };
+    } catch (error) {
+        console.error('❌ Error obteniendo estadísticas:', error);
+        throw error;
+    }
+}
+
+/**
+ * Obtener estadísticas detalladas de un evento (descarga todos los registros)
+ * Solo usar cuando realmente se necesite el detalle (exportar, etc.)
+ */
+async function getEstadisticasCompletas(eventoId) {
     try {
         const db = firebase.firestore();
         const snapshot = await db.collection('eventos')
@@ -236,17 +253,31 @@ async function getEstadisticasEvento(eventoId) {
             if (data.estado === 'ACTIVO') activos++;
         });
         
-        return {
-            total,
-            sincronizados,
-            pendientesSincronizacion: total - sincronizados,
-            activos,
-            inactivos: total - activos
-        };
+        return { total, sincronizados, pendientesSincronizacion: total - sincronizados, activos, inactivos: total - activos };
     } catch (error) {
-        console.error('❌ Error obteniendo estadísticas:', error);
+        console.error('❌ Error obteniendo estadísticas completas:', error);
         throw error;
     }
+}
+
+/**
+ * Recalcular y guardar totalRegistros en todos los eventos (migración one-time)
+ */
+async function recalcularContadores() {
+    const db = firebase.firestore();
+    const eventos = await db.collection('eventos').get();
+    const batch = db.batch();
+    const counts = [];
+    
+    for (const eventoDoc of eventos.docs) {
+        const snap = await db.collection('eventos').doc(eventoDoc.id).collection('registros').get();
+        batch.update(eventoDoc.ref, { totalRegistros: snap.size });
+        counts.push({ id: eventoDoc.id, total: snap.size });
+    }
+    
+    await batch.commit();
+    console.log('✅ Contadores actualizados:', counts);
+    return counts;
 }
 
 /**
@@ -386,6 +417,8 @@ window.FirebaseAdmin = {
     toggleEventoActivo,
     eliminarEvento,
     getEstadisticasEvento,
+    getEstadisticasCompletas,
+    recalcularContadores,
     getAllRegistrosEvento,
     exportarCSV,
     buscarPorDNI
