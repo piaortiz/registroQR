@@ -390,8 +390,8 @@
                     <tr class="${estadoClass}">
                         <td>
                             <div style="display: flex; flex-direction: column;">
-                                <strong style="font-size: 15px; color: var(--primary);">${evento.nombre}</strong>
-                                <small style="color: #666; margin-top: 3px;">ID: ${evento.id}</small>
+                                <strong>${evento.nombre}</strong>
+                                <small>ID: ${evento.id}</small>
                             </div>
                         </td>
                         <td>
@@ -402,25 +402,21 @@
                         </td>
                         <td>
                             ${evento.activo ?
-                        '<span class="badge badge-success" style="font-size: 13px;">ACTIVO</span>' :
-                        '<span class="badge badge-danger" style="font-size: 13px;">INACTIVO</span>'}
+                        '<span class="badge badge-success">ACTIVO</span>' :
+                        '<span class="badge badge-danger">INACTIVO</span>'}
                         </td>
                         <td>
-                            <div style="text-align: center;">
-                                <strong style="font-size: 20px; color: var(--primary);">${stats.total}</strong>
-                                <div style="font-size: 11px; color: #666;">participantes</div>
+                            <div class="cell-participantes">
+                                <strong>${stats.total}</strong>
+                                <div>participantes</div>
                             </div>
                         </td>
-                        <td style="text-align: center;">
-                            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-                                ${evento.activo ? 
-                                    `<button class="btn btn-warning" onclick="toggleEvento('${evento.id}', false)" style="padding: 8px 15px; font-size: 13px;">Desactivar</button>` :
-                                    `<button class="btn btn-success" onclick="toggleEvento('${evento.id}', true)" style="padding: 8px 15px; font-size: 13px;">Activar</button>`
-                                }
-                                <button class="btn btn-info" onclick="verRegistros('${evento.id}', '${evento.nombre}')" style="padding: 8px 15px; font-size: 13px;">
-                                    Ver Registros
-                                </button>
-                            </div>
+                        <td class="td-acciones">
+                            ${evento.activo ? 
+                                `<button class="btn btn-warning" onclick="toggleEvento('${evento.id}', false)">Desactivar</button>` :
+                                `<button class="btn btn-success" onclick="toggleEvento('${evento.id}', true)">Activar</button>`
+                            }
+                            <button class="btn btn-info" onclick="verRegistros('${evento.id}', '${evento.nombre}')">Ver Registros</button>
                         </td>
                     </tr>
                 `;
