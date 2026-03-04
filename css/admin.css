@@ -12,27 +12,27 @@
     /* Gold palette */
     --gold:         #a69867;
     --gold-light:   #c4b888;
-    --gold-dark:    #7d724d;
-    --gold-pale:    #f2edd8;
-    --gold-glow:    rgba(166,152,103,0.18);
+    --gold-dark:    #6e6140;
+    --gold-pale:    #f0e9d6;
+    --gold-glow:    rgba(166,152,103,0.2);
 
     /* Light surfaces */
-    --bg:           #f6f4f0;
-    --bg-warm:      #faf8f4;
+    --bg:           #eeeae3;
+    --bg-warm:      #f5f2ec;
     --surface:      #ffffff;
-    --surface-2:    #f9f7f3;
-    --surface-3:    #f2efe9;
+    --surface-2:    #faf8f4;
+    --surface-3:    #f0ece4;
 
     /* Borders */
-    --border:       rgba(166,152,103,0.22);
-    --border-soft:  rgba(166,152,103,0.12);
-    --border-strong:rgba(166,152,103,0.48);
+    --border:       #d4c9b2;
+    --border-soft:  #e4ddd0;
+    --border-strong:#b8a98c;
 
     /* Text */
-    --text-primary: #1c1a16;
-    --text-secondary:#4a4438;
-    --text-muted:   #8c8070;
-    --text-subtle:  #b8ad9e;
+    --text-primary: #1a1712;
+    --text-secondary:#3d3626;
+    --text-muted:   #72664e;
+    --text-subtle:  #a8997e;
 
     /* Semantic */
     --success:   #1e7a49;
@@ -50,10 +50,10 @@
     --radius-lg: 20px;
 
     /* Shadows */
-    --shadow-sm:  0 1px 4px rgba(100,80,40,0.07), 0 2px 12px rgba(100,80,40,0.05);
-    --shadow-md:  0 4px 20px rgba(100,80,40,0.1), 0 1px 4px rgba(100,80,40,0.06);
-    --shadow-lg:  0 12px 40px rgba(100,80,40,0.14), 0 4px 12px rgba(100,80,40,0.08);
-    --shadow-gold:0 4px 24px rgba(166,152,103,0.22);
+    --shadow-sm:  0 1px 3px rgba(80,60,20,0.08), 0 2px 10px rgba(80,60,20,0.07);
+    --shadow-md:  0 4px 18px rgba(80,60,20,0.13), 0 1px 4px rgba(80,60,20,0.08);
+    --shadow-lg:  0 12px 40px rgba(80,60,20,0.18), 0 4px 12px rgba(80,60,20,0.1);
+    --shadow-gold:0 4px 20px rgba(166,152,103,0.3);
 
     /* Legacy compat */
     --primary:   #a69867;
@@ -76,9 +76,6 @@ body {
     font-family: 'DM Sans', -apple-system, sans-serif;
     font-weight: 400;
     background: var(--bg);
-    background-image:
-        radial-gradient(ellipse 80% 50% at 100% 0%, rgba(166,152,103,0.08) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 0% 100%, rgba(166,152,103,0.05) 0%, transparent 55%);
     min-height: 100vh;
     padding: 20px;
     color: var(--text-primary);
@@ -124,9 +121,9 @@ body {
 .login-container h3 {
     font-family: 'DM Sans', sans-serif;
     text-align: center;
-    color: var(--gold);
+    color: var(--gold-dark);
     font-size: 0.78rem;
-    font-weight: 500;
+    font-weight: 600;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     margin-bottom: 38px;
@@ -339,7 +336,7 @@ body {
     font-family: 'DM Sans', sans-serif;
     font-size: 0.83rem;
     font-weight: 500;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     border-radius: 10px;
     transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s;
     letter-spacing: 0.03em;
@@ -404,7 +401,7 @@ body {
 .stat-card h3 {
     color: var(--text-muted);
     font-size: 0.68rem;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.16em;
     margin-bottom: 12px;
@@ -415,8 +412,11 @@ body {
     font-size: 3rem;
     font-weight: 700;
     line-height: 1;
-    color: var(--text-primary);
     letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--gold-dark) 20%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 /* ─── CONTENT SECTIONS ───────────────────────────────────────────── */
@@ -458,15 +458,15 @@ table {
 
 th {
     padding: 10px 14px;
-    background: var(--surface-2);
-    color: var(--text-muted);
+    background: var(--surface-3);
+    color: var(--text-secondary);
     font-family: 'DM Sans', sans-serif;
     font-size: 0.68rem;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
     text-align: left;
-    border-bottom: 1px solid var(--border-soft);
+    border-bottom: 1px solid var(--border);
 }
 
 td {
