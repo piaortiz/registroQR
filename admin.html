@@ -355,19 +355,15 @@
                 ? eventosData
                 : await FirebaseAdmin.getAllEventos();
 
-            let totalRegistros = 0;
-            let eventosActivos = 0;
-
-            for (const evento of eventos) {
-                // Lee del campo totalRegistros del doc (1 lectura por evento, ya en memoria si eventosData)
-                totalRegistros += (evento.totalRegistros || 0);
-                if (evento.activo) eventosActivos++;
-            }
-
+            // Solo muestra el contador del evento activo — no itera históricos
+            const eventoActivo = eventos.find(e => e.activo);
+            const clickAttr = eventoActivo
+                ? `onclick="verRegistros('${eventoActivo.id}', '${eventoActivo.nombre}')" style="cursor: pointer;" title="Ver registros del evento activo"`
+                : `style="cursor: default;" title="No hay evento activo"`;
             document.getElementById('statsGrid').innerHTML = `
-                <div class="stat-card" onclick="verTodosRegistros()" style="cursor: pointer;" title="Ver todos los registros">
-                    <h3>Total Registros</h3>
-                    <div class="number">${totalRegistros}</div>
+                <div class="stat-card" ${clickAttr}>
+                    <h3>Total Registros (evento activo)</h3>
+                    <div class="number">${eventoActivo ? (eventoActivo.totalRegistros || 0) : 0}</div>
                 </div>
             `;
         }
@@ -424,10 +420,11 @@
                         </td>
                         <td class="td-acciones">
                             ${evento.activo ? 
-                                `<button class="btn btn-warning" onclick="toggleEvento('${evento.id}', false)">Desactivar</button>` :
-                                `<button class="btn btn-success" onclick="toggleEvento('${evento.id}', true)">Activar</button>`
+                                `<button class="btn btn-warning" onclick="toggleEvento('${evento.id}', false)">Desactivar</button>
+                                 <button class="btn btn-info" onclick="verRegistros('${evento.id}', '${evento.nombre}')">Ver Registros</button>` :
+                                `<button class="btn btn-success" onclick="toggleEvento('${evento.id}', true)">Activar</button>
+                                 <span class="text-muted" style="font-size:12px; padding: 4px 8px;">Historial no disponible</span>`
                             }
-                            <button class="btn btn-info" onclick="verRegistros('${evento.id}', '${evento.nombre}')">Ver Registros</button>
                         </td>
                     </tr>
                 `;
@@ -480,35 +477,14 @@
             }
         }
 
-        // Ver todos los registros
-        async function verTodosRegistros() {
-            eventoSeleccionadoId = 'todos';
-            document.getElementById('eventoSeleccionadoNombre').textContent = 'Todos los Registros Históricos';
-            document.getElementById('registrosSection').style.display = 'block';
-            document.getElementById('registrosTabla').innerHTML = '<div class="spinner"></div>';
-
-            // Scroll a la sección
-            document.getElementById('registrosSection').scrollIntoView({ behavior: 'smooth' });
-
-            let todosLosRegistros = [];
-
-            try {
-                if (!eventosData || eventosData.length === 0) {
-                    eventosData = await FirebaseAdmin.getAllEventos();
-                }
-
-                // Recopilar registros de todos los eventos
-                for (const evento of eventosData) {
-                    const regs = await FirebaseAdmin.getAllRegistrosEvento(evento.id);
-                    todosLosRegistros = todosLosRegistros.concat(regs);
-                }
-
-                registrosActuales = todosLosRegistros;
-                mostrarRegistros(registrosActuales);
-            } catch (error) {
-                console.error('Error cargando todos los registros:', error);
-                document.getElementById('registrosTabla').innerHTML = '<p style="color: red;">Error cargando registros: ' + error.message + '</p>';
+        // Ver registros del evento activo (redirige directamente, no carga históricos)
+        function verTodosRegistros() {
+            const eventoActivo = eventosData && eventosData.find(e => e.activo);
+            if (!eventoActivo) {
+                alert('No hay ningún evento activo.');
+                return;
             }
+            verRegistros(eventoActivo.id, eventoActivo.nombre);
         }
 
         // Ver registros de un evento
