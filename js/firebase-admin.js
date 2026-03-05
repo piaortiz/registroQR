@@ -28,64 +28,16 @@ async function loginWithFirebase(email, password) {
 }
 
 /**
- * Verificar credenciales de administrador
- * IMPORTANTE: Configurar usuario admin en Firebase Console primero
- */
-function verificarAdmin(password) {
-    // Sistema legacy - debe migrar a Firebase Auth
-    // Por ahora retorna false para forzar uso de Firebase Auth
-    console.warn('⚠️ Sistema legacy - Usar Firebase Authentication');
-    return false;
-}
-
-/**
- * Guardar sesión de admin
- */
-function guardarSesionAdmin() {
-    sessionStorage.setItem('admin_logged', 'true');
-    sessionStorage.setItem('admin_logged_at', Date.now());
-}
-
-/**
- * Verificar si hay sesión activa
- */
-function verificarSesion() {
-    const isLogged = sessionStorage.getItem('admin_logged') === 'true';
-    const loggedAt = parseInt(sessionStorage.getItem('admin_logged_at') || '0');
-    const sessionTimeout = 4 * 60 * 60 * 1000; // 4 horas
-    
-    if (isLogged && (Date.now() - loggedAt) < sessionTimeout) {
-        return true;
-    }
-    
-    // Sesión expirada
-    if (isLogged) {
-        cerrarSesion();
-    }
-    return false;
-}
-
-/**
- * Verificar estado de Firebase Auth
- */
-function verificarFirebaseAuth() {
-    const auth = firebase.auth();
-    return auth.currentUser !== null;
-}
-
-/**
  * Cerrar sesión
+ * Única fuente de verdad: Firebase Auth + onAuthStateChanged en admin.html.
  */
 async function cerrarSesion() {
     try {
         await firebase.auth().signOut();
+        console.log('✅ Sesión cerrada correctamente');
     } catch (error) {
         console.error('Error al cerrar sesión Firebase:', error);
     }
-    sessionStorage.removeItem('admin_logged');
-    sessionStorage.removeItem('admin_logged_at');
-    // El onAuthStateChanged detectará el logout y mostrará la pantalla de login
-    console.log('✅ Sesión cerrada correctamente');
 }
 
 /**
@@ -232,9 +184,29 @@ async function getEstadisticasEvento(eventoId) {
 
 /**
  * Obtener estadísticas detalladas de un evento (descarga todos los registros)
- * Solo usar cuando realmente se necesite el detalle (exportar, etc.)
+ * ⚠️  COSTO ALTO: genera N lecturas de Firestore (una por registro).
+ * Solo usar cuando sea estrictamente necesario (auditoría puntual).
+ * Para el dashboard normal, usar getEstadisticasEvento() que es gratuita.
+ *
+ * Rate limiting: máximo 1 vez cada 30 minutos por eventoId.
  */
 async function getEstadisticasCompletas(eventoId) {
+    // ── RATE LIMITING: máximo 1 vez cada 30 minutos por evento ──
+    const LIMITER_KEY = `cmn_estadisticas_completas_${eventoId}`;
+    const COOLDOWN_MS = 30 * 60 * 1000; // 30 minutos
+    const lastRun = parseInt(localStorage.getItem(LIMITER_KEY) || '0');
+    if (Date.now() - lastRun < COOLDOWN_MS) {
+        const minutosRestantes = Math.ceil((COOLDOWN_MS - (Date.now() - lastRun)) / 60000);
+        console.warn(`⏳ getEstadisticasCompletas() bloqueada por rate limiting. Reintentá en ${minutosRestantes} min.`);
+        throw new Error(`Operación bloqueada: esperá ${minutosRestantes} minuto${minutosRestantes !== 1 ? 's' : ''} antes de volver a ejecutar estadísticas completas.`);
+    }
+
+    console.warn(
+        '⚠️  getEstadisticasCompletas() — OPERACIÓN COSTOSA\n' +
+        `Descargando TODOS los registros del evento "${eventoId}".\n` +
+        'Considera usar getEstadisticasEvento() si solo necesitás el total.'
+    );
+
     try {
         const db = firebase.firestore();
         const snapshot = await db.collection('eventos')
@@ -252,6 +224,9 @@ async function getEstadisticasCompletas(eventoId) {
             if (data.syncedToSheets) sincronizados++;
             if (data.estado === 'ACTIVO') activos++;
         });
+
+        // Guardar timestamp del último uso
+        localStorage.setItem(LIMITER_KEY, Date.now().toString());
         
         return { total, sincronizados, pendientesSincronizacion: total - sincronizados, activos, inactivos: total - activos };
     } catch (error) {
@@ -261,9 +236,16 @@ async function getEstadisticasCompletas(eventoId) {
 }
 
 /**
- * Recalcular y guardar totalRegistros en todos los eventos (migración one-time)
+ * Recalcular y guardar totalRegistros en todos los eventos.
+ * ⚠️  COSTO ALTO: lee todos los registros de todos los eventos (N lecturas).
+ * Solo usar ante inconsistencias reales. El panel de admin aplica rate limiting
+ * de 1 hora antes de permitir una nueva llamada.
  */
 async function recalcularContadores() {
+    console.warn(
+        '⚠️  recalcularContadores() — OPERACIÓN COSTOSA\n' +
+        'Descargando todos los registros de todos los eventos para recalcular contadores.'
+    );
     const db = firebase.firestore();
     const eventos = await db.collection('eventos').get();
     const batch = db.batch();
@@ -408,9 +390,6 @@ async function buscarPorDNI(dni) {
 
 // Exportar funciones
 window.FirebaseAdmin = {
-    verificarAdmin,
-    guardarSesionAdmin,
-    verificarSesion,
     cerrarSesion,
     verificarYCorregirEventosActivos,
     getAllEventos,

@@ -629,12 +629,36 @@
 
         // Recalcular contadores (usar si los números no coinciden con la realidad)
         async function sincronizarContadores() {
+            // ── RATE LIMITING: máximo 1 vez cada 60 minutos ──
+            const LIMITER_KEY = 'cmn_sync_counters_last';
+            const COOLDOWN_MS = 60 * 60 * 1000; // 1 hora
+            const lastRun = parseInt(localStorage.getItem(LIMITER_KEY) || '0');
+            const minutosRestantes = Math.ceil((COOLDOWN_MS - (Date.now() - lastRun)) / 60000);
+
+            if (Date.now() - lastRun < COOLDOWN_MS) {
+                alert(`⏳ Esta operación ya fue ejecutada recientemente.\n\nPodés volver a usarla en ${minutosRestantes} minuto${minutosRestantes !== 1 ? 's' : ''}.\n\nEsta restricción existe para evitar consumo excesivo de lecturas en Firebase.`);
+                return;
+            }
+
+            // ── CONFIRMACIÓN CON ADVERTENCIA DE COSTO ──
+            const cantEventos = eventosData ? eventosData.length : '?';
+            const confirmar = confirm(
+                `⚠️  OPERACIÓN CON ALTO CONSUMO DE LECTURAS\n\n` +
+                `Esta operación descarga TODOS los registros de TODOS los eventos (${cantEventos} eventos) ` +
+                `para recalcular los contadores.\n\n` +
+                `Usala SOLO si los números en pantalla no coinciden con la realidad.\n\n` +
+                `¿Confirmar ejecución?`
+            );
+            if (!confirmar) return;
+
             const btn = document.querySelector('.btn-sync-counters');
             const original = btn.textContent;
             btn.textContent = 'Calculando...';
             btn.disabled = true;
             try {
                 const counts = await FirebaseAdmin.recalcularContadores();
+                // Guardar timestamp del último uso
+                localStorage.setItem(LIMITER_KEY, Date.now().toString());
                 const resumen = counts.map(c => `${c.id}: ${c.total}`).join('\n');
                 alert(`✅ Contadores actualizados:\n${resumen}`);
                 await cargarEventos();

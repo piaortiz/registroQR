@@ -40,6 +40,12 @@ service cloud.firestore {
       // Admin autenticado puede hacer todo
       allow read, write: if isAuthenticated();
       
+      // Permitir a usuarios no autenticados incrementar SOLO el contador totalRegistros
+      // cuando el evento está activo (necesario para el flujo de registro público)
+      allow update: if resource != null
+        && resource.data.activo == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalRegistros']);
+      
       // Subcolección de registros por evento
       match /registros/{dni} {
         // Permitir crear registro si:
@@ -52,8 +58,10 @@ service cloud.firestore {
           && request.resource.data.keys().hasAll(['dni', 'nombreCompleto', 'fechaNacimiento', 'email', 'telefono']);
         
         // Permitir lectura pública de un DNI específico (para verificar duplicados)
-        // Solo si el evento está activo
-        allow read: if isValidDNI(dni) && isEventoActivo(eventoId);
+        // No se requiere que el evento esté activo para leer: es solo verificación de duplicados
+        // y no representa riesgo de seguridad. Eliminar isEventoActivo() aquí ahorra
+        // 1 lectura oculta de Firestore por cada intento de registro.
+        allow read: if isValidDNI(dni);
         
         // Admin autenticado puede leer todo con collectionGroup
         allow list: if isAuthenticated();
