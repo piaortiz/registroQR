@@ -236,29 +236,34 @@ async function getEstadisticasCompletas(eventoId) {
 }
 
 /**
- * Recalcular y guardar totalRegistros en todos los eventos.
- * ⚠️  COSTO ALTO: lee todos los registros de todos los eventos (N lecturas).
- * Solo usar ante inconsistencias reales. El panel de admin aplica rate limiting
- * de 1 hora antes de permitir una nueva llamada.
+ * Recalcular y guardar totalRegistros Únicamente del evento activo.
+ * Costo fijo: 1 query + N registros del evento activo (bajo y predecible).
+ * Los eventos históricos (inactivos) no se recalculan: sus contadores
+ * quedaron correctos en el momento en que se desactivaron.
  */
 async function recalcularContadores() {
-    console.warn(
-        '⚠️  recalcularContadores() — OPERACIÓN COSTOSA\n' +
-        'Descargando todos los registros de todos los eventos para recalcular contadores.'
-    );
     const db = firebase.firestore();
-    const eventos = await db.collection('eventos').get();
-    const batch = db.batch();
+
+    // Solo leer el evento activo (1 query, devuelve 1 doc máximo)
+    const eventosActivos = await db.collection('eventos').where('activo', '==', true).get();
+
+    if (eventosActivos.empty) {
+        console.warn('⚠️ recalcularContadores: no hay evento activo.');
+        return [];
+    }
+
     const counts = [];
-    
-    for (const eventoDoc of eventos.docs) {
+    const batch = db.batch();
+
+    for (const eventoDoc of eventosActivos.docs) {
+        // Contar registros del evento activo
         const snap = await db.collection('eventos').doc(eventoDoc.id).collection('registros').get();
         batch.update(eventoDoc.ref, { totalRegistros: snap.size });
         counts.push({ id: eventoDoc.id, total: snap.size });
+        console.log(`✅ Contador actualizado — ${eventoDoc.id}: ${snap.size} registros`);
     }
-    
+
     await batch.commit();
-    console.log('✅ Contadores actualizados:', counts);
     return counts;
 }
 

@@ -640,14 +640,15 @@
                 return;
             }
 
-            // ── CONFIRMACIÓN CON ADVERTENCIA DE COSTO ──
-            const cantEventos = eventosData ? eventosData.length : '?';
+            // ── CONFIRMACIÓN ──
+            const eventoActivo = eventosData ? eventosData.find(e => e.activo) : null;
+            const nombreActivo = eventoActivo ? eventoActivo.nombre : '(ninguno activo)';
             const confirmar = confirm(
-                `⚠️  OPERACIÓN CON ALTO CONSUMO DE LECTURAS\n\n` +
-                `Esta operación descarga TODOS los registros de TODOS los eventos (${cantEventos} eventos) ` +
-                `para recalcular los contadores.\n\n` +
-                `Usala SOLO si los números en pantalla no coinciden con la realidad.\n\n` +
-                `¿Confirmar ejecución?`
+                `⚠️  Sincronizar contador del evento activo\n\n` +
+                `Evento: "${nombreActivo}"\n\n` +
+                `Se contarán todos sus registros y se actualizará el contador.\n` +
+                `Los eventos históricos no se tocan.\n\n` +
+                `¿Confirmar?`
             );
             if (!confirmar) return;
 
