@@ -15,7 +15,7 @@ function debugLog(...args) {
 
 // Configuración de cache para tablet
 const CACHE_CONFIG = {
-    EVENTO_ACTIVO_TTL: 30 * 60 * 1000, // 30 minutos (tablet siempre conectada)
+    EVENTO_ACTIVO_TTL: 2 * 60 * 1000, // 2 minutos - propagación rápida al cambiar evento activo
     ENABLE_CACHE: true,
     STORAGE_KEY_EVENTO: 'cmn_evento_activo',
     STORAGE_KEY_TIMESTAMP: 'cmn_evento_timestamp'

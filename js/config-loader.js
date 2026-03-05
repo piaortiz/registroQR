@@ -348,6 +348,27 @@
     }
 
     /**
+     * Verificar en background si hay una versión más nueva en Firebase.
+     * No bloquea la UI - se ejecuta sin await.
+     */
+    async function verificarVersionEnBackground(versionLocal) {
+        try {
+            const firebaseData = await loadConfigFromFirebase();
+            if (firebaseData.cacheVersion > versionLocal) {
+                console.log('🔄 Nueva versión detectada en background, actualizando estilos...');
+                sessionStorage.removeItem(CACHE_KEY);
+                saveToCache(firebaseData.config, firebaseData.cacheVersion);
+                applyConfiguration(firebaseData.config);
+            } else {
+                console.log('✅ Cache vigente, no hay cambios en Firebase');
+            }
+        } catch (error) {
+            // Silencioso: no es crítico, se reintentará en la próxima carga
+            console.warn('⚠️ No se pudo verificar versión en background:', error);
+        }
+    }
+
+    /**
      * Inicializar - Función principal
      */
     async function init() {
@@ -358,23 +379,15 @@
             let cachedData = getFromCache();
 
             if (cachedData) {
-                console.log('📦 Verificando versión de cache...');
-                
-                // SIEMPRE verificar si hay una versión más nueva en Firebase
-                // Esto permite sincronización cross-device
-                const firebaseData = await loadConfigFromFirebase();
-                
-                if (firebaseData.cacheVersion > cachedData.cacheVersion) {
-                    console.log('🔄 Nueva versión detectada en Firebase, actualizando...');
-                    sessionStorage.removeItem(CACHE_KEY);
-                    saveToCache(firebaseData.config, firebaseData.cacheVersion);
-                    applyConfiguration(firebaseData.config);
-                } else {
-                    console.log('✅ Cache actualizado, usando configuración guardada');
-                    applyConfiguration(cachedData.config);
-                }
+                // INMEDIATO: aplicar estilos del cache sin esperar Firebase (evita FOUC)
+                console.log('📦 Cache disponible, aplicando estilos inmediatamente...');
+                applyConfiguration(cachedData.config);
+
+                // BACKGROUND: verificar si hay versión más nueva sin bloquear la UI
+                verificarVersionEnBackground(cachedData.cacheVersion);
             } else {
-                console.log('🔄 Cargando configuración desde Firebase...');
+                // Sin cache (primera visita): cargar desde Firebase
+                console.log('🔄 Sin cache, cargando configuración desde Firebase...');
                 const firebaseData = await loadConfigFromFirebase();
                 saveToCache(firebaseData.config, firebaseData.cacheVersion);
                 applyConfiguration(firebaseData.config);
